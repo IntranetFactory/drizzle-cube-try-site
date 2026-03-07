@@ -4,6 +4,7 @@
  */
 
 import { eq, sql } from 'drizzle-orm'
+import type { SQL } from 'drizzle-orm'
 import { defineCube } from 'drizzle-cube/server'
 import type { BaseQueryDefinition, Cube, Dimension, Measure, CubeJoin, CubeRelationship, Hierarchy } from 'drizzle-cube/server'
 import type { AnyColumn } from 'drizzle-orm'
@@ -42,12 +43,12 @@ export interface EntityCubeJoin {
 
 export type EntityDimension = Omit<Dimension, 'sql'> & (
   | { column: string; sql?: never }
-  | { column?: never; sql: Dimension['sql'] }
+  | { column?: never; sql: string }
 )
 
 export type EntityMeasure = Omit<Measure, 'sql'> & (
   | { column: string; sql?: never }
-  | { column?: never; sql?: Measure['sql'] }
+  | { column?: never; sql?: string }
 )
 
 export interface EntityCube {
@@ -430,13 +431,7 @@ registerEntityCube('Productivity', {
       name: 'happinessLevel',
       title: 'Happiness Level',
       type: 'string',
-      sql: sql`
-        CASE
-          WHEN ${schema["productivity"].happiness_index} >= 8 THEN 'High'
-          WHEN ${schema["productivity"].happiness_index} >= 6 THEN 'Medium'
-          ELSE 'Low'
-        END
-      `
+      sql: 'CASE WHEN ${schema["productivity"].happiness_index} >= 8 THEN \'High\' WHEN ${schema["productivity"].happiness_index} >= 6 THEN \'Medium\' ELSE \'Low\' END'
     },
     departmentId: {
       name: 'departmentId',
@@ -552,7 +547,7 @@ registerEntityCube('Productivity', {
       name: 'productivityScore',
       title: 'Productivity Score',
       type: 'avg',
-      sql: sql`(${schema["productivity"].lines_of_code} + ${schema["productivity"].pull_requests} * 50 + ${schema["productivity"].live_deployments} * 100)`,
+      sql: '(${schema["productivity"].lines_of_code} + ${schema["productivity"].pull_requests} * 50 + ${schema["productivity"].live_deployments} * 100)',
       description: 'Composite productivity score based on code output, reviews, and deployments'
     },
 
@@ -887,7 +882,7 @@ registerEntityCube('TimeEntries', {
       name: 'utilizationRate',
       title: 'Utilization Rate (%)',
       type: 'avg',
-      sql: sql`(${schema["time_entries"].billable_hours} / NULLIF(${schema["time_entries"].hours}, 0) * 100)`,
+      sql: '(${schema["time_entries"].billable_hours} / NULLIF(${schema["time_entries"].hours}, 0) * 100)',
       description: 'Percentage of billable vs total hours'
     },
     avgDailyHours: {
@@ -1180,6 +1175,33 @@ function resolveColumn(ref: string): AnyColumn {
   return table[columnName]
 }
 
+/**
+ * Parse an expression string like '(${schema["time_entries"].billable_hours} / NULLIF(${schema["time_entries"].hours}, 0) * 100)'
+ * into a Drizzle SQL object, replacing ${schema["table"].column} patterns with actual schema column objects.
+ * This preserves column identity so CTE aliasing and query building work correctly.
+ */
+function buildDynamicSql(expression: string): SQL {
+  // Split on ${schema["tableName"].columnName} patterns, keeping the delimiters
+  const pattern = /(\$\{schema\["([a-z_][a-z0-9_]*)"\]\.([a-z_][a-z0-9_]*)\})/gi
+  const chunks: (AnyColumn | SQL)[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  while ((match = pattern.exec(expression)) !== null) {
+    if (match.index > lastIndex) {
+      chunks.push(sql.raw(expression.slice(lastIndex, match.index)))
+    }
+    const tableName = match[2]
+    const columnName = match[3]
+    const table = schema[tableName as keyof typeof schema] as unknown as Record<string, AnyColumn>
+    chunks.push(table[columnName])
+    lastIndex = match.index + match[0].length
+  }
+  if (lastIndex < expression.length) {
+    chunks.push(sql.raw(expression.slice(lastIndex)))
+  }
+  return sql.join(chunks)
+}
+
 function entityCubesToCubes(registry: Map<string, EntityCube>): Cube[] {
   for (const ec of registry.values()) {
     const { name, joins, tableName, ...rest } = ec
@@ -1202,18 +1224,21 @@ function entityCubesToCubes(registry: Map<string, EntityCube>): Cube[] {
         )
       : undefined
 
-    // Resolve column strings to sql references in dimensions and measures
-    // Resolve column strings to sql references in dimensions and measures
+
+    // Resolve column or sql strings to Drizzle column/SQL references in dimensions and measures
     const dimensions = Object.fromEntries(
       Object.entries(rest.dimensions).map(([key, dim]) => {
-        const { column, ...dimRest } = dim as EntityDimension & { column?: string }
-        return [key, column ? { ...dimRest, sql: resolveColumn(column) } : dimRest]
+        const { column, sql: sqlStr, ...dimRest } = dim as EntityDimension & { column?: string; sql?: string }
+        const sqlValue = column ? resolveColumn(column) : sqlStr ? buildDynamicSql(sqlStr) : undefined
+        return [key, sqlValue ? { ...dimRest, sql: sqlValue } : dimRest]
       })
     ) as Record<string, Dimension>
+
     const measures = Object.fromEntries(
       Object.entries(rest.measures).map(([key, m]) => {
-        const { column, ...mRest } = m as EntityMeasure & { column?: string }
-        return [key, column ? { ...mRest, sql: resolveColumn(column) } : mRest]
+        const { column, sql: sqlStr, ...mRest } = m as EntityMeasure & { column?: string; sql?: string }
+        const sqlValue = column ? resolveColumn(column) : sqlStr ? buildDynamicSql(sqlStr) : undefined
+        return [key, sqlValue ? { ...mRest, sql: sqlValue } : mRest]
       })
     ) as Record<string, Measure>
 
