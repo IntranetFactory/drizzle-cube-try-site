@@ -6,7 +6,7 @@
 import { eq, sql } from 'drizzle-orm'
 import { defineCube } from 'drizzle-cube/server'
 import type { QueryContext, BaseQueryDefinition, Cube } from 'drizzle-cube/server'
-import { employees, departments, productivity, timeEntries, prEvents, teams, employeeTeams } from './schema'
+import * as schema from './schema'
 
 // Forward declarations for circular dependency resolution
 let employeesCube: Cube
@@ -25,8 +25,8 @@ employeesCube = defineCube('Employees', {
   description: 'Employee data and metrics',
   
   sql: (ctx: QueryContext): BaseQueryDefinition => ({
-    from: employees,
-    where: eq(employees.organisationId, ctx.securityContext.organisationId as number)
+    from: schema["employees"],
+    where: eq(schema["employees"].organisationId, ctx.securityContext.organisationId as number)
   }),
 
   // Cube-level joins for cross-cube queries
@@ -35,28 +35,28 @@ employeesCube = defineCube('Employees', {
       targetCube: () => departmentsCube,
       relationship: 'belongsTo',
       on: [
-        { source: employees.departmentId, target: departments.id }
+        { source: schema["employees"].departmentId, target: schema["departments"].id }
       ]
     },
     Productivity: {
       targetCube: () => productivityCube,
       relationship: 'hasMany',
       on: [
-        { source: employees.id, target: productivity.employeeId }
+        { source: schema["employees"].id, target: schema["productivity"].employeeId }
       ]
     },
     TimeEntries: {
       targetCube: () => timeEntriesCube,
       relationship: 'hasMany',
       on: [
-        { source: employees.id, target: timeEntries.employeeId }
+        { source: schema["employees"].id, target: schema["timeEntries"].employeeId }
       ]
     },
     PREvents: {
       targetCube: () => prEventsCube,
       relationship: 'hasMany',
       on: [
-        { source: employees.id, target: prEvents.employeeId }
+        { source: schema["employees"].id, target: schema["prEvents"].employeeId }
       ]
     },
     EmployeeTeams: {
@@ -64,7 +64,7 @@ employeesCube = defineCube('Employees', {
       relationship: 'hasMany',
       preferredFor: ['Teams'],
       on: [
-        { source: employees.id, target: employeeTeams.employeeId }
+        { source: schema["employees"].id, target: schema["employeeTeams"].employeeId }
       ]
     }
   },
@@ -82,69 +82,69 @@ employeesCube = defineCube('Employees', {
       name: 'id',
       title: 'Employee ID',
       type: 'number',
-      sql: employees.id,
+      sql: schema["employees"].id,
       primaryKey: true
     },
     name: {
       name: 'name',
       title: 'Employee Name',
       type: 'string',
-      sql: employees.name
+      sql: schema["employees"].name
     },
     email: {
       name: 'email',
       title: 'Email Address',
       type: 'string',
-      sql: employees.email
+      sql: schema["employees"].email
     },
     departmentId: {
       name: 'departmentId',
       title: 'Department ID',
       type: 'number',
-      sql: employees.departmentId
+      sql: schema["employees"].departmentId
     },
     isActive: {
       name: 'isActive',
       title: 'Active Status',
       type: 'boolean',
-      sql: employees.active
+      sql: schema["employees"].active
     },
     createdAt: {
       name: 'createdAt',
       title: 'Hire Date',
       type: 'time',
-      sql: employees.createdAt
+      sql: schema["employees"].createdAt
     },
     // Location dimensions
     city: {
       name: 'city',
       title: 'City',
       type: 'string',
-      sql: employees.city
+      sql: schema["employees"].city
     },
     region: {
       name: 'region',
       title: 'State/Region',
       type: 'string',
-      sql: employees.region
+      sql: schema["employees"].region
     },
     country: {
       name: 'country',
       title: 'Country',
       type: 'string',
-      sql: employees.country
+      sql: schema["employees"].country
     },
     latitude: {
       name: 'latitude',
       title: 'Latitude',
       type: 'number',
-      sql: employees.latitude
+      sql: schema["employees"].latitude
     },
     longitude: {
       name: 'longitude',
       title: 'Longitude',
       type: 'number',
-      sql: employees.longitude
+      sql: schema["employees"].longitude
     }
   },
 
@@ -153,16 +153,16 @@ employeesCube = defineCube('Employees', {
       name: 'count',
       title: 'Total Employees',
       type: 'countDistinct',
-      sql: employees.id,
+      sql: schema["employees"].id,
       drillMembers: ['Employees.name', 'Employees.email', 'Employees.isActive', 'Departments.name']
     },
     activeCount: {
       name: 'activeCount',
       title: 'Active Employees',
       type: 'countDistinct',
-      sql: employees.id,
+      sql: schema["employees"].id,
       filters: [
-        () => eq(employees.active, true)
+        () => eq(schema["employees"].active, true)
       ],
       drillMembers: ['Employees.name', 'Employees.email', 'Departments.name']
     },
@@ -170,14 +170,14 @@ employeesCube = defineCube('Employees', {
       name: 'totalSalary',
       title: 'Total Salary',
       type: 'sum',
-      sql: employees.salary,
+      sql: schema["employees"].salary,
       drillMembers: ['Employees.name', 'Departments.name', 'Employees.city']
     },
     avgSalary: {
       name: 'avgSalary',
       title: 'Average Salary',
       type: 'avg',
-      sql: employees.salary,
+      sql: schema["employees"].salary,
       format: 'currency',
       drillMembers: ['Employees.name', 'Departments.name', 'Employees.city']
     },
@@ -186,18 +186,23 @@ employeesCube = defineCube('Employees', {
       name: 'medianSalary',
       title: 'Median Salary',
       type: 'median',
-      sql: employees.salary,
+      sql: schema["employees"].salary,
       description: 'Median salary (50th percentile)'
     },
     stddevSalary: {
       name: 'stddevSalary',
       title: 'Salary Std Dev',
       type: 'stddev',
-      sql: employees.salary,
+      sql: schema["employees"].salary,
       description: 'Standard deviation of salaries'
     }
   }
 }) as Cube
+
+console.log("START---");
+//console.log(schema["employees"])
+//console.log(employeesCube)
+
 
 /**
  * Departments cube - department-level analytics (single table)
@@ -207,8 +212,8 @@ departmentsCube = defineCube('Departments', {
   description: 'Department-level metrics and budget analysis',
   
   sql: (ctx: QueryContext): BaseQueryDefinition => ({
-    from: departments,
-    where: eq(departments.organisationId, ctx.securityContext.organisationId as number)
+    from: schema["departments"],
+    where: eq(schema["departments"].organisationId, ctx.securityContext.organisationId as number)
   }),
 
   // Cube-level joins for cross-cube queries
@@ -217,28 +222,28 @@ departmentsCube = defineCube('Departments', {
       targetCube: () => employeesCube,
       relationship: 'hasMany',
       on: [
-        { source: departments.id, target: employees.departmentId }
+        { source: schema["departments"].id, target: schema["employees"].departmentId }
       ]
     },
     TimeEntries: {
       targetCube: () => timeEntriesCube,
       relationship: 'hasMany',
       on: [
-        { source: departments.id, target: timeEntries.departmentId }
+        { source: schema["departments"].id, target: schema["timeEntries"].departmentId }
       ]
     },
     Productivity: {
       targetCube: () => productivityCube,
       relationship: 'hasMany',
       on: [
-        { source: departments.id, target: productivity.departmentId }
+        { source: schema["departments"].id, target: schema["productivity"].departmentId }
       ]
     },
     Teams: {
       targetCube: () => teamsCube,
       relationship: 'hasMany',
       on: [
-        { source: departments.id, target: teams.departmentId }
+        { source: schema["departments"].id, target: schema["teams"].departmentId }
       ]
     }
   },
@@ -248,14 +253,14 @@ departmentsCube = defineCube('Departments', {
       name: 'id',
       title: 'Department ID',
       type: 'number',
-      sql: departments.id,
+      sql: schema["departments"].id,
       primaryKey: true
     },
     name: {
       name: 'name',
       title: 'Department Name',
       type: 'string',
-      sql: departments.name
+      sql: schema["departments"].name
     }
   },
 
@@ -264,21 +269,21 @@ departmentsCube = defineCube('Departments', {
       name: 'count',
       title: 'Department Count',
       type: 'countDistinct',
-      sql: departments.id,
+      sql: schema["departments"].id,
       drillMembers: ['Departments.name']
     },
     totalBudget: {
       name: 'totalBudget',
       title: 'Total Budget',
       type: 'sum',
-      sql: departments.budget,
+      sql: schema["departments"].budget,
       drillMembers: ['Departments.name']
     },
     avgBudget: {
       name: 'avgBudget',
       title: 'Average Budget',
       type: 'avg',
-      sql: departments.budget,
+      sql: schema["departments"].budget,
       drillMembers: ['Departments.name']
     }
   }
@@ -292,8 +297,8 @@ productivityCube = defineCube('Productivity', {
   description: 'Daily productivity metrics including code output and deployments',
   
   sql: (ctx: QueryContext): BaseQueryDefinition => ({
-    from: productivity,  
-    where: eq(productivity.organisationId, ctx.securityContext.organisationId as number)
+    from: schema["productivity"],
+    where: eq(schema["productivity"].organisationId, ctx.securityContext.organisationId as number)
   }),
 
   // Cube-level joins for multi-cube queries
@@ -303,7 +308,7 @@ productivityCube = defineCube('Productivity', {
       relationship: 'belongsTo',
       preferredFor: ['Teams'],
       on: [
-        { source: productivity.employeeId, target: employees.id }
+        { source: schema["productivity"].employeeId, target: schema["employees"].id }
       ]
     },
     EmployeeTeams: {
@@ -311,14 +316,14 @@ productivityCube = defineCube('Productivity', {
       relationship: 'hasMany',
       preferredFor: ['Teams'],
       on: [
-        { source: productivity.employeeId, target: employeeTeams.employeeId }
+        { source: schema["productivity"].employeeId, target: schema["employeeTeams"].employeeId }
       ]
     },
     Departments: {
       targetCube: () => departmentsCube,
       relationship: 'belongsTo',
       on: [
-        { source: productivity.departmentId, target: departments.id }
+        { source: schema["productivity"].departmentId, target: schema["departments"].id }
       ]
     }
   },
@@ -336,32 +341,32 @@ productivityCube = defineCube('Productivity', {
       name: 'id',
       title: 'Record ID',
       type: 'number',
-      sql: productivity.id,
+      sql: schema["productivity"].id,
       primaryKey: true
     },
     date: {
       name: 'date',
       title: 'Date',
       type: 'time',
-      sql: productivity.date
+      sql: schema["productivity"].date
     },
     createdAt: {
       name: 'createdAt',
       title: 'Created At',
       type: 'time',
-      sql: productivity.createdAt
+      sql: schema["productivity"].createdAt
     },
     isDayOff: {
       name: 'isDayOff',
       title: 'Day Off',
       type: 'boolean',
-      sql: productivity.daysOff
+      sql: schema["productivity"].daysOff
     },
     happinessIndex: {
       name: 'happinessIndex',
       title: 'Happiness Index',
       type: 'number',
-      sql: productivity.happinessIndex
+      sql: schema["productivity"].happinessIndex
     },
     happinessLevel: {
       name: 'happinessLevel',
@@ -369,8 +374,8 @@ productivityCube = defineCube('Productivity', {
       type: 'string',
       sql: sql`
         CASE 
-          WHEN ${productivity.happinessIndex} >= 8 THEN 'High'
-          WHEN ${productivity.happinessIndex} >= 6 THEN 'Medium'
+          WHEN ${schema["productivity"].happinessIndex} >= 8 THEN 'High'
+          WHEN ${schema["productivity"].happinessIndex} >= 6 THEN 'Medium'
           ELSE 'Low'
         END
       `
@@ -379,26 +384,26 @@ productivityCube = defineCube('Productivity', {
       name: 'departmentId',
       title: 'Department ID',
       type: 'number',
-      sql: productivity.departmentId
+      sql: schema["productivity"].departmentId
     },
     employeeId: {
       name: 'employeeId',
       title: 'Employee ID',
       type: 'number',
-      sql: productivity.employeeId
+      sql: schema["productivity"].employeeId
     },
     linesOfCode: {
       name: 'linesOfCode',
       title: 'Lines of Code',
       type: 'number',
-      sql: productivity.linesOfCode,
+      sql: schema["productivity"].linesOfCode,
       description: 'Raw lines of code for this record'
     },
     pullRequests: {
       name: 'pullRequests',
       title: 'Pull Requests',
       type: 'number',
-      sql: productivity.pullRequests,
+      sql: schema["productivity"].pullRequests,
       description: 'Raw PR count for this record'
     }
   },
@@ -408,23 +413,23 @@ productivityCube = defineCube('Productivity', {
       name: 'count',
       title: 'Total Records',
       type: 'count',
-      sql: productivity.id,
+      sql: schema["productivity"].id,
       drillMembers: ['Productivity.date', 'Employees.name', 'Departments.name']
     },
     recordCount: {
       name: 'recordCount',
       title: 'Record Count',
       type: 'count',
-      sql: productivity.id,
+      sql: schema["productivity"].id,
       drillMembers: ['Productivity.date', 'Employees.name', 'Departments.name']
     },
     workingDaysCount: {
       name: 'workingDaysCount',
       title: 'Working Days',
       type: 'count',
-      sql: productivity.id,
+      sql: schema["productivity"].id,
       filters: [
-        () => eq(productivity.daysOff, false)
+        () => eq(schema["productivity"].daysOff, false)
       ],
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.isDayOff']
     },
@@ -432,9 +437,9 @@ productivityCube = defineCube('Productivity', {
       name: 'daysOffCount',
       title: 'Days Off',
       type: 'count',
-      sql: productivity.id,
+      sql: schema["productivity"].id,
       filters: [
-        () => eq(productivity.daysOff, true)
+        () => eq(schema["productivity"].daysOff, true)
       ],
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.isDayOff']
     },
@@ -442,54 +447,54 @@ productivityCube = defineCube('Productivity', {
       name: 'avgLinesOfCode',
       title: 'Average Lines of Code',
       type: 'avg',
-      sql: productivity.linesOfCode,
+      sql: schema["productivity"].linesOfCode,
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.linesOfCode', 'Departments.name']
     },
     totalLinesOfCode: {
       name: 'totalLinesOfCode',
       title: 'Total Lines of Code',
       type: 'sum',
-      sql: productivity.linesOfCode,
+      sql: schema["productivity"].linesOfCode,
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.linesOfCode', 'Departments.name']
     },
     totalPullRequests: {
       name: 'totalPullRequests',
       title: 'Total Pull Requests',
       type: 'sum',
-      sql: productivity.pullRequests,
+      sql: schema["productivity"].pullRequests,
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.pullRequests', 'Departments.name']
     },
     avgPullRequests: {
       name: 'avgPullRequests',
       title: 'Average Pull Requests',
       type: 'avg',
-      sql: productivity.pullRequests,
+      sql: schema["productivity"].pullRequests,
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.pullRequests', 'Departments.name']
     },
     totalDeployments: {
       name: 'totalDeployments',
       title: 'Total Deployments',
       type: 'sum',
-      sql: productivity.liveDeployments
+      sql: schema["productivity"].liveDeployments
     },
     avgDeployments: {
       name: 'avgDeployments',
       title: 'Average Deployments',
       type: 'avg',
-      sql: productivity.liveDeployments
+      sql: schema["productivity"].liveDeployments
     },
     avgHappinessIndex: {
       name: 'avgHappinessIndex',
       title: 'Average Happiness',
       type: 'avg',
-      sql: productivity.happinessIndex,
+      sql: schema["productivity"].happinessIndex,
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.happinessIndex', 'Productivity.happinessLevel']
     },
     productivityScore: {
       name: 'productivityScore',
       title: 'Productivity Score',
       type: 'avg',
-      sql: sql`(${productivity.linesOfCode} + ${productivity.pullRequests} * 50 + ${productivity.liveDeployments} * 100)`,
+      sql: sql`(${schema["productivity"].linesOfCode} + ${schema["productivity"].pullRequests} * 50 + ${schema["productivity"].liveDeployments} * 100)`,
       description: 'Composite productivity score based on code output, reviews, and deployments'
     },
 
@@ -498,21 +503,21 @@ productivityCube = defineCube('Productivity', {
       name: 'stddevLinesOfCode',
       title: 'Lines of Code Std Dev',
       type: 'stddev',
-      sql: productivity.linesOfCode,
+      sql: schema["productivity"].linesOfCode,
       description: 'Variation in daily code output'
     },
     medianLinesOfCode: {
       name: 'medianLinesOfCode',
       title: 'Median Lines of Code',
       type: 'median',
-      sql: productivity.linesOfCode,
+      sql: schema["productivity"].linesOfCode,
       description: 'Median daily code output'
     },
     p95LinesOfCode: {
       name: 'p95LinesOfCode',
       title: '95th Percentile Lines',
       type: 'p95',
-      sql: productivity.linesOfCode,
+      sql: schema["productivity"].linesOfCode,
       description: 'High performer code output threshold'
     },
     // Statistical measures - Happiness Distribution
@@ -520,14 +525,14 @@ productivityCube = defineCube('Productivity', {
       name: 'stddevHappinessIndex',
       title: 'Happiness Std Dev',
       type: 'stddev',
-      sql: productivity.happinessIndex,
+      sql: schema["productivity"].happinessIndex,
       description: 'Variation in team happiness'
     },
     medianHappinessIndex: {
       name: 'medianHappinessIndex',
       title: 'Median Happiness',
       type: 'median',
-      sql: productivity.happinessIndex,
+      sql: schema["productivity"].happinessIndex,
       description: 'Median happiness score'
     },
     // Statistical measures - Pull Requests
@@ -535,14 +540,14 @@ productivityCube = defineCube('Productivity', {
       name: 'medianPullRequests',
       title: 'Median Pull Requests',
       type: 'median',
-      sql: productivity.pullRequests,
+      sql: schema["productivity"].pullRequests,
       description: 'Median daily pull requests'
     },
     p95PullRequests: {
       name: 'p95PullRequests',
       title: '95th Percentile PRs',
       type: 'p95',
-      sql: productivity.pullRequests,
+      sql: schema["productivity"].pullRequests,
       description: 'High performer PR threshold'
     },
 
@@ -650,8 +655,8 @@ timeEntriesCube = defineCube('TimeEntries', {
   description: 'Employee time tracking with allocation types, departments, and billable hours',
   
   sql: (ctx: QueryContext): BaseQueryDefinition => ({
-    from: timeEntries,    
-    where: eq(timeEntries.organisationId, ctx.securityContext.organisationId as number)
+    from: schema["timeEntries"],
+    where: eq(schema["timeEntries"].organisationId, ctx.securityContext.organisationId as number)
   }),
 
   joins: {
@@ -659,14 +664,14 @@ timeEntriesCube = defineCube('TimeEntries', {
       targetCube: () => employeesCube,
       relationship: 'belongsTo',
       on: [
-        { source: timeEntries.employeeId, target: employees.id }
+        { source: schema["timeEntries"].employeeId, target: schema["employees"].id }
       ]
     },
     Departments: {
       targetCube: () => departmentsCube,
       relationship: 'belongsTo', 
       on: [
-        { source: timeEntries.departmentId, target: departments.id }
+        { source: schema["timeEntries"].departmentId, target: schema["departments"].id }
       ]
     }
   },
@@ -676,44 +681,44 @@ timeEntriesCube = defineCube('TimeEntries', {
       name: 'id',
       title: 'Time Entry ID',
       type: 'number',
-      sql: timeEntries.id,
+      sql: schema["timeEntries"].id,
       primaryKey: true
     },
     employeeId: {
       name: 'employeeId',
       title: 'Employee ID',
       type: 'number',
-      sql: timeEntries.employeeId
+      sql: schema["timeEntries"].employeeId
     },
     departmentId: {
       name: 'departmentId', 
       title: 'Department ID',
       type: 'number',
-      sql: timeEntries.departmentId
+      sql: schema["timeEntries"].departmentId
     },
     allocationType: {
       name: 'allocationType',
       title: 'Allocation Type',
       type: 'string',
-      sql: timeEntries.allocationType
+      sql: schema["timeEntries"].allocationType
     },
     description: {
       name: 'description',
       title: 'Task Description',
       type: 'string',
-      sql: timeEntries.description
+      sql: schema["timeEntries"].description
     },
     date: {
       name: 'date',
       title: 'Date',
       type: 'time',
-      sql: timeEntries.date
+      sql: schema["timeEntries"].date
     },
     createdAt: {
       name: 'createdAt',
       title: 'Created At',
       type: 'time',
-      sql: timeEntries.createdAt
+      sql: schema["timeEntries"].createdAt
     }
   },
 
@@ -723,7 +728,7 @@ timeEntriesCube = defineCube('TimeEntries', {
       name: 'count',
       title: 'Total Time Entries',
       type: 'count',
-      sql: timeEntries.id,
+      sql: schema["timeEntries"].id,
       description: 'Total number of time entries'
     },
     
@@ -732,27 +737,27 @@ timeEntriesCube = defineCube('TimeEntries', {
       name: 'totalHours',
       title: 'Total Hours',
       type: 'sum',
-      sql: timeEntries.hours,
+      sql: schema["timeEntries"].hours,
       description: 'Sum of all logged hours'
     },
     avgHours: {
       name: 'avgHours',
       title: 'Average Hours per Entry',
       type: 'avg',
-      sql: timeEntries.hours,
+      sql: schema["timeEntries"].hours,
       description: 'Average hours per time entry'
     },
     minHours: {
       name: 'minHours',
       title: 'Minimum Hours',
       type: 'min',
-      sql: timeEntries.hours
+      sql: schema["timeEntries"].hours
     },
     maxHours: {
       name: 'maxHours',
       title: 'Maximum Hours',
       type: 'max',
-      sql: timeEntries.hours
+      sql: schema["timeEntries"].hours
     },
     
     // Billable hours measures
@@ -760,14 +765,14 @@ timeEntriesCube = defineCube('TimeEntries', {
       name: 'totalBillableHours',
       title: 'Total Billable Hours',
       type: 'sum',
-      sql: timeEntries.billableHours,
+      sql: schema["timeEntries"].billableHours,
       description: 'Sum of all billable hours'
     },
     avgBillableHours: {
       name: 'avgBillableHours',
       title: 'Average Billable Hours',
       type: 'avg',
-      sql: timeEntries.billableHours
+      sql: schema["timeEntries"].billableHours
     },
     
     // Allocation-specific measures with filters
@@ -775,9 +780,9 @@ timeEntriesCube = defineCube('TimeEntries', {
       name: 'developmentHours',
       title: 'Development Hours',
       type: 'sum',
-      sql: timeEntries.hours,
+      sql: schema["timeEntries"].hours,
       filters: [
-        () => eq(timeEntries.allocationType, 'development')
+        () => eq(schema["timeEntries"].allocationType, 'development')
       ],
       description: 'Total hours spent on development tasks'
     },
@@ -785,9 +790,9 @@ timeEntriesCube = defineCube('TimeEntries', {
       name: 'meetingHours',
       title: 'Meeting Hours',
       type: 'sum',
-      sql: timeEntries.hours,
+      sql: schema["timeEntries"].hours,
       filters: [
-        () => eq(timeEntries.allocationType, 'meetings')
+        () => eq(schema["timeEntries"].allocationType, 'meetings')
       ],
       description: 'Total hours spent in meetings'
     },
@@ -795,9 +800,9 @@ timeEntriesCube = defineCube('TimeEntries', {
       name: 'maintenanceHours',
       title: 'Maintenance Hours',
       type: 'sum',
-      sql: timeEntries.hours,
+      sql: schema["timeEntries"].hours,
       filters: [
-        () => eq(timeEntries.allocationType, 'maintenance')
+        () => eq(schema["timeEntries"].allocationType, 'maintenance')
       ]
     },
     
@@ -806,20 +811,20 @@ timeEntriesCube = defineCube('TimeEntries', {
       name: 'distinctEmployees',
       title: 'Unique Employees',
       type: 'countDistinct',
-      sql: timeEntries.employeeId,
+      sql: schema["timeEntries"].employeeId,
       description: 'Number of unique employees with time entries'
     },
     distinctDepartments: {
       name: 'distinctDepartments',
       title: 'Unique Departments',
       type: 'countDistinct', 
-      sql: timeEntries.departmentId
+      sql: schema["timeEntries"].departmentId
     },
     distinctAllocations: {
       name: 'distinctAllocations',
       title: 'Unique Allocation Types',
       type: 'countDistinct',
-      sql: timeEntries.allocationType
+      sql: schema["timeEntries"].allocationType
     },
     
     // Complex calculated measures
@@ -827,14 +832,14 @@ timeEntriesCube = defineCube('TimeEntries', {
       name: 'utilizationRate',
       title: 'Utilization Rate (%)',
       type: 'avg',
-      sql: sql`(${timeEntries.billableHours} / NULLIF(${timeEntries.hours}, 0) * 100)`,
+      sql: sql`(${schema["timeEntries"].billableHours} / NULLIF(${schema["timeEntries"].hours}, 0) * 100)`,
       description: 'Percentage of billable vs total hours'
     },
     avgDailyHours: {
       name: 'avgDailyHours',  
       title: 'Average Daily Hours',
       type: 'avg',
-      sql: timeEntries.hours,
+      sql: schema["timeEntries"].hours,
       description: 'Average hours logged per day'
     }
   }
@@ -848,8 +853,8 @@ prEventsCube = defineCube('PREvents', {
   description: 'Pull request lifecycle events for funnel analysis',
 
   sql: (ctx: QueryContext): BaseQueryDefinition => ({
-    from: prEvents,
-    where: eq(prEvents.organisationId, ctx.securityContext.organisationId as number)
+    from: schema["prEvents"],
+    where: eq(schema["prEvents"].organisationId, ctx.securityContext.organisationId as number)
   }),
 
   joins: {
@@ -857,7 +862,7 @@ prEventsCube = defineCube('PREvents', {
       targetCube: () => employeesCube,
       relationship: 'belongsTo',
       on: [
-        { source: prEvents.employeeId, target: employees.id }
+        { source: schema["prEvents"].employeeId, target: schema["employees"].id }
       ]
     }
   },
@@ -867,38 +872,38 @@ prEventsCube = defineCube('PREvents', {
       name: 'id',
       title: 'Event ID',
       type: 'number',
-      sql: prEvents.id,
+      sql: schema["prEvents"].id,
       primaryKey: true
     },
     prNumber: {
       name: 'prNumber',
       title: 'PR Number',
       type: 'number',
-      sql: prEvents.prNumber
+      sql: schema["prEvents"].prNumber
     },
     eventType: {
       name: 'eventType',
       title: 'Event Type',
       type: 'string',
-      sql: prEvents.eventType
+      sql: schema["prEvents"].eventType
     },
     employeeId: {
       name: 'employeeId',
       title: 'Employee ID',
       type: 'number',
-      sql: prEvents.employeeId
+      sql: schema["prEvents"].employeeId
     },
     timestamp: {
       name: 'timestamp',
       title: 'Event Timestamp',
       type: 'time',
-      sql: prEvents.timestamp
+      sql: schema["prEvents"].timestamp
     },
     createdAt: {
       name: 'createdAt',
       title: 'Created At',
       type: 'time',
-      sql: prEvents.createdAt
+      sql: schema["prEvents"].createdAt
     }
   },
 
@@ -907,21 +912,21 @@ prEventsCube = defineCube('PREvents', {
       name: 'count',
       title: 'Event Count',
       type: 'count',
-      sql: prEvents.id,
+      sql: schema["prEvents"].id,
       drillMembers: ['PREvents.prNumber', 'PREvents.eventType', 'PREvents.timestamp', 'Employees.name']
     },
     uniquePRs: {
       name: 'uniquePRs',
       title: 'Unique PRs',
       type: 'countDistinct',
-      sql: prEvents.prNumber,
+      sql: schema["prEvents"].prNumber,
       drillMembers: ['PREvents.prNumber', 'PREvents.eventType', 'PREvents.timestamp']
     },
     uniqueActors: {
       name: 'uniqueActors',
       title: 'Unique Actors',
       type: 'countDistinct',
-      sql: prEvents.employeeId,
+      sql: schema["prEvents"].employeeId,
       drillMembers: ['Employees.name', 'PREvents.prNumber', 'PREvents.eventType']
     }
   },
@@ -943,8 +948,8 @@ teamsCube = defineCube('Teams', {
   description: 'Team structure and membership analysis',
 
   sql: (ctx: QueryContext): BaseQueryDefinition => ({
-    from: teams,
-    where: eq(teams.organisationId, ctx.securityContext.organisationId as number)
+    from: schema["teams"],
+    where: eq(schema["teams"].organisationId, ctx.securityContext.organisationId as number)
   }),
 
   joins: {
@@ -952,7 +957,7 @@ teamsCube = defineCube('Teams', {
       targetCube: () => departmentsCube,
       relationship: 'belongsTo',
       on: [
-        { source: teams.departmentId, target: departments.id }
+        { source: schema["teams"].departmentId, target: schema["departments"].id }
       ]
     },
     EmployeeTeams: {
@@ -960,7 +965,7 @@ teamsCube = defineCube('Teams', {
       relationship: 'hasMany',
       preferredFor: ['Productivity'],
       on: [
-        { source: teams.id, target: employeeTeams.teamId }
+        { source: schema["teams"].id, target: schema["employeeTeams"].teamId }
       ]
     }
   },
@@ -970,32 +975,32 @@ teamsCube = defineCube('Teams', {
       name: 'id',
       title: 'Team ID',
       type: 'number',
-      sql: teams.id,
+      sql: schema["teams"].id,
       primaryKey: true
     },
     name: {
       name: 'name',
       title: 'Team Name',
       type: 'string',
-      sql: teams.name
+      sql: schema["teams"].name
     },
     description: {
       name: 'description',
       title: 'Description',
       type: 'string',
-      sql: teams.description
+      sql: schema["teams"].description
     },
     departmentId: {
       name: 'departmentId',
       title: 'Department ID',
       type: 'number',
-      sql: teams.departmentId
+      sql: schema["teams"].departmentId
     },
     createdAt: {
       name: 'createdAt',
       title: 'Created At',
       type: 'time',
-      sql: teams.createdAt
+      sql: schema["teams"].createdAt
     }
   },
 
@@ -1004,7 +1009,7 @@ teamsCube = defineCube('Teams', {
       name: 'count',
       title: 'Total Teams',
       type: 'countDistinct',
-      sql: teams.id,
+      sql: schema["teams"].id,
       drillMembers: ['Teams.name', 'Teams.description', 'Departments.name']
     }
   }
@@ -1018,8 +1023,8 @@ employeeTeamsCube = defineCube('EmployeeTeams', {
   description: 'Employee team assignments and roles',
 
   sql: (ctx: QueryContext): BaseQueryDefinition => ({
-    from: employeeTeams,
-    where: eq(employeeTeams.organisationId, ctx.securityContext.organisationId as number)
+    from: schema["employeeTeams"],
+    where: eq(schema["employeeTeams"].organisationId, ctx.securityContext.organisationId as number)
   }),
 
   joins: {
@@ -1028,7 +1033,7 @@ employeeTeamsCube = defineCube('EmployeeTeams', {
       relationship: 'belongsTo',
       preferredFor: ['Productivity'],
       on: [
-        { source: employeeTeams.employeeId, target: employees.id }
+        { source: schema["employeeTeams"].employeeId, target: schema["employees"].id }
       ]
     },
     Teams: {
@@ -1036,7 +1041,7 @@ employeeTeamsCube = defineCube('EmployeeTeams', {
       relationship: 'belongsTo',
       preferredFor: ['Productivity'],
       on: [
-        { source: employeeTeams.teamId, target: teams.id }
+        { source: schema["employeeTeams"].teamId, target: schema["teams"].id }
       ]
     }
   },
@@ -1054,32 +1059,32 @@ employeeTeamsCube = defineCube('EmployeeTeams', {
       name: 'id',
       title: 'Membership ID',
       type: 'number',
-      sql: employeeTeams.id,
+      sql: schema["employeeTeams"].id,
       primaryKey: true
     },
     employeeId: {
       name: 'employeeId',
       title: 'Employee ID',
       type: 'number',
-      sql: employeeTeams.employeeId
+      sql: schema["employeeTeams"].employeeId
     },
     teamId: {
       name: 'teamId',
       title: 'Team ID',
       type: 'number',
-      sql: employeeTeams.teamId
+      sql: schema["employeeTeams"].teamId
     },
     role: {
       name: 'role',
       title: 'Team Role',
       type: 'string',
-      sql: employeeTeams.role
+      sql: schema["employeeTeams"].role
     },
     joinedAt: {
       name: 'joinedAt',
       title: 'Joined Team',
       type: 'time',
-      sql: employeeTeams.joinedAt
+      sql: schema["employeeTeams"].joinedAt
     }
   },
 
@@ -1088,30 +1093,30 @@ employeeTeamsCube = defineCube('EmployeeTeams', {
       name: 'count',
       title: 'Total Memberships',
       type: 'count',
-      sql: employeeTeams.id,
+      sql: schema["employeeTeams"].id,
       drillMembers: ['Employees.name', 'Teams.name', 'EmployeeTeams.role', 'EmployeeTeams.joinedAt']
     },
     uniqueEmployees: {
       name: 'uniqueEmployees',
       title: 'Unique Employees',
       type: 'countDistinct',
-      sql: employeeTeams.employeeId,
+      sql: schema["employeeTeams"].employeeId,
       drillMembers: ['Employees.name', 'Teams.name', 'EmployeeTeams.role']
     },
     uniqueTeams: {
       name: 'uniqueTeams',
       title: 'Unique Teams',
       type: 'countDistinct',
-      sql: employeeTeams.teamId,
+      sql: schema["employeeTeams"].teamId,
       drillMembers: ['Teams.name', 'Employees.name', 'EmployeeTeams.role']
     },
     leadCount: {
       name: 'leadCount',
       title: 'Team Leads',
       type: 'count',
-      sql: employeeTeams.id,
+      sql: schema["employeeTeams"].id,
       filters: [
-        () => eq(employeeTeams.role, 'lead')
+        () => eq(schema["employeeTeams"].role, 'lead')
       ],
       drillMembers: ['Employees.name', 'Teams.name', 'EmployeeTeams.joinedAt']
     }
