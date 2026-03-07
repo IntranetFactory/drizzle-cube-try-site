@@ -5,8 +5,8 @@
 
 import { eq, sql } from 'drizzle-orm'
 import { defineCube } from 'drizzle-cube/server'
-import type { QueryContext, BaseQueryDefinition, Cube, Dimension, Measure, CubeJoin, CubeRelationship, Hierarchy } from 'drizzle-cube/server'
-import type { AnyColumn, SQL } from 'drizzle-orm'
+import type { BaseQueryDefinition, Cube, Dimension, Measure, CubeJoin, CubeRelationship, Hierarchy } from 'drizzle-cube/server'
+import type { AnyColumn } from 'drizzle-orm'
 import * as staticSchema from './drizzle_schema'
 import { schemaToJSON, jsonToSchema } from './schemaGenerator'
 
@@ -35,19 +35,29 @@ console.log(`schemaToJSON: ${(t1 - t0).toFixed(2)}ms | jsonToSchema: ${(t3 - t2)
 export interface EntityCubeJoin {
   targetCube: string
   relationship: CubeRelationship
-  on: Array<{ source: AnyColumn; target: AnyColumn; as?: (source: AnyColumn, target: AnyColumn) => SQL }>
+  on: Array<{ source: string; target: string }>
   sqlJoinType?: 'inner' | 'left' | 'right' | 'full'
   preferredFor?: string[]
 }
+
+export type EntityDimension = Omit<Dimension, 'sql'> & (
+  | { column: string; sql?: never }
+  | { column?: never; sql: Dimension['sql'] }
+)
+
+export type EntityMeasure = Omit<Measure, 'sql'> & (
+  | { column: string; sql?: never }
+  | { column?: never; sql?: Measure['sql'] }
+)
 
 export interface EntityCube {
   name: string
   title?: string
   description?: string
   exampleQuestions?: string[]
-  sql: (ctx: QueryContext) => BaseQueryDefinition
-  dimensions: Record<string, Dimension>
-  measures: Record<string, Measure>
+  tableName: string
+  dimensions: Record<string, EntityDimension>
+  measures: Record<string, EntityMeasure>
   joins?: Record<string, EntityCubeJoin>
   hierarchies?: Record<string, Hierarchy>
   public?: boolean
@@ -85,10 +95,7 @@ registerEntityCube('Employees', {
   title: 'Employee Analytics',
   description: 'Employee data and metrics',
   
-  sql: (ctx: QueryContext): BaseQueryDefinition => ({
-    from: schema["employees"],
-    where: eq(schema["employees"].organisationId, ctx.securityContext.organisationId as number)
-  }),
+  tableName: "employees",
 
   // Cube-level joins for cross-cube queries
   joins: {
@@ -96,28 +103,28 @@ registerEntityCube('Employees', {
       targetCube: 'Departments',
       relationship: 'belongsTo',
       on: [
-        { source: schema["employees"].departmentId, target: schema["departments"].id }
+        { source: "employees.departmentId", target: "departments.id" }
       ]
     },
     Productivity: {
       targetCube: 'Productivity',
       relationship: 'hasMany',
       on: [
-        { source: schema["employees"].id, target: schema["productivity"].employeeId }
+        { source: "employees.id", target: "productivity.employeeId" }
       ]
     },
     TimeEntries: {
       targetCube: 'TimeEntries',
       relationship: 'hasMany',
       on: [
-        { source: schema["employees"].id, target: schema["timeEntries"].employeeId }
+        { source: "employees.id", target: "timeEntries.employeeId" }
       ]
     },
     PREvents: {
       targetCube: 'PREvents',
       relationship: 'hasMany',
       on: [
-        { source: schema["employees"].id, target: schema["prEvents"].employeeId }
+        { source: "employees.id", target: "prEvents.employeeId" }
       ]
     },
     EmployeeTeams: {
@@ -125,7 +132,7 @@ registerEntityCube('Employees', {
       relationship: 'hasMany',
       preferredFor: ['Teams'],
       on: [
-        { source: schema["employees"].id, target: schema["employeeTeams"].employeeId }
+        { source: "employees.id", target: "employeeTeams.employeeId" }
       ]
     }
   },
@@ -143,69 +150,69 @@ registerEntityCube('Employees', {
       name: 'id',
       title: 'Employee ID',
       type: 'number',
-      sql: schema["employees"].id,
+      column: "employees.id",
       primaryKey: true
     },
     name: {
       name: 'name',
       title: 'Employee Name',
       type: 'string',
-      sql: schema["employees"].name
+      column: "employees.name"
     },
     email: {
       name: 'email',
       title: 'Email Address',
       type: 'string',
-      sql: schema["employees"].email
+      column: "employees.email"
     },
     departmentId: {
       name: 'departmentId',
       title: 'Department ID',
       type: 'number',
-      sql: schema["employees"].departmentId
+      column: "employees.departmentId"
     },
     isActive: {
       name: 'isActive',
       title: 'Active Status',
       type: 'boolean',
-      sql: schema["employees"].active
+      column: "employees.active"
     },
     createdAt: {
       name: 'createdAt',
       title: 'Hire Date',
       type: 'time',
-      sql: schema["employees"].createdAt
+      column: "employees.createdAt"
     },
     // Location dimensions
     city: {
       name: 'city',
       title: 'City',
       type: 'string',
-      sql: schema["employees"].city
+      column: "employees.city"
     },
     region: {
       name: 'region',
       title: 'State/Region',
       type: 'string',
-      sql: schema["employees"].region
+      column: "employees.region"
     },
     country: {
       name: 'country',
       title: 'Country',
       type: 'string',
-      sql: schema["employees"].country
+      column: "employees.country"
     },
     latitude: {
       name: 'latitude',
       title: 'Latitude',
       type: 'number',
-      sql: schema["employees"].latitude
+      column: "employees.latitude"
     },
     longitude: {
       name: 'longitude',
       title: 'Longitude',
       type: 'number',
-      sql: schema["employees"].longitude
+      column: "employees.longitude"
     }
   },
 
@@ -214,14 +221,14 @@ registerEntityCube('Employees', {
       name: 'count',
       title: 'Total Employees',
       type: 'countDistinct',
-      sql: schema["employees"].id,
+      column: "employees.id",
       drillMembers: ['Employees.name', 'Employees.email', 'Employees.isActive', 'Departments.name']
     },
     activeCount: {
       name: 'activeCount',
       title: 'Active Employees',
       type: 'countDistinct',
-      sql: schema["employees"].id,
+      column: "employees.id",
       filters: [
         () => eq(schema["employees"].active, true)
       ],
@@ -231,14 +238,14 @@ registerEntityCube('Employees', {
       name: 'totalSalary',
       title: 'Total Salary',
       type: 'sum',
-      sql: schema["employees"].salary,
+      column: "employees.salary",
       drillMembers: ['Employees.name', 'Departments.name', 'Employees.city']
     },
     avgSalary: {
       name: 'avgSalary',
       title: 'Average Salary',
       type: 'avg',
-      sql: schema["employees"].salary,
+      column: "employees.salary",
       format: 'currency',
       drillMembers: ['Employees.name', 'Departments.name', 'Employees.city']
     },
@@ -247,14 +254,14 @@ registerEntityCube('Employees', {
       name: 'medianSalary',
       title: 'Median Salary',
       type: 'median',
-      sql: schema["employees"].salary,
+      column: "employees.salary",
       description: 'Median salary (50th percentile)'
     },
     stddevSalary: {
       name: 'stddevSalary',
       title: 'Salary Std Dev',
       type: 'stddev',
-      sql: schema["employees"].salary,
+      column: "employees.salary",
       description: 'Standard deviation of salaries'
     }
   }
@@ -268,10 +275,7 @@ registerEntityCube('Departments', {
   title: 'Department Analytics',
   description: 'Department-level metrics and budget analysis',
   
-  sql: (ctx: QueryContext): BaseQueryDefinition => ({
-    from: schema["departments"],
-    where: eq(schema["departments"].organisationId, ctx.securityContext.organisationId as number)
-  }),
+  tableName: "departments",
 
   // Cube-level joins for cross-cube queries
   joins: {
@@ -279,28 +283,28 @@ registerEntityCube('Departments', {
       targetCube: 'Employees',
       relationship: 'hasMany',
       on: [
-        { source: schema["departments"].id, target: schema["employees"].departmentId }
+        { source: "departments.id", target: "employees.departmentId" }
       ]
     },
     TimeEntries: {
       targetCube: 'TimeEntries',
       relationship: 'hasMany',
       on: [
-        { source: schema["departments"].id, target: schema["timeEntries"].departmentId }
+        { source: "departments.id", target: "timeEntries.departmentId" }
       ]
     },
     Productivity: {
       targetCube: 'Productivity',
       relationship: 'hasMany',
       on: [
-        { source: schema["departments"].id, target: schema["productivity"].departmentId }
+        { source: "departments.id", target: "productivity.departmentId" }
       ]
     },
     Teams: {
       targetCube: 'Teams',
       relationship: 'hasMany',
       on: [
-        { source: schema["departments"].id, target: schema["teams"].departmentId }
+        { source: "departments.id", target: "teams.departmentId" }
       ]
     }
   },
@@ -310,14 +314,14 @@ registerEntityCube('Departments', {
       name: 'id',
       title: 'Department ID',
       type: 'number',
-      sql: schema["departments"].id,
+      column: "departments.id",
       primaryKey: true
     },
     name: {
       name: 'name',
       title: 'Department Name',
       type: 'string',
-      sql: schema["departments"].name
+      column: "departments.name"
     }
   },
 
@@ -326,21 +330,21 @@ registerEntityCube('Departments', {
       name: 'count',
       title: 'Department Count',
       type: 'countDistinct',
-      sql: schema["departments"].id,
+      column: "departments.id",
       drillMembers: ['Departments.name']
     },
     totalBudget: {
       name: 'totalBudget',
       title: 'Total Budget',
       type: 'sum',
-      sql: schema["departments"].budget,
+      column: "departments.budget",
       drillMembers: ['Departments.name']
     },
     avgBudget: {
       name: 'avgBudget',
       title: 'Average Budget',
       type: 'avg',
-      sql: schema["departments"].budget,
+      column: "departments.budget",
       drillMembers: ['Departments.name']
     }
   }
@@ -353,10 +357,7 @@ registerEntityCube('Productivity', {
   title: 'Productivity Analytics',
   description: 'Daily productivity metrics including code output and deployments',
   
-  sql: (ctx: QueryContext): BaseQueryDefinition => ({
-    from: schema["productivity"],
-    where: eq(schema["productivity"].organisationId, ctx.securityContext.organisationId as number)
-  }),
+  tableName: "productivity",
 
   // Cube-level joins for multi-cube queries
   joins: {
@@ -365,7 +366,7 @@ registerEntityCube('Productivity', {
       relationship: 'belongsTo',
       preferredFor: ['Teams'],
       on: [
-        { source: schema["productivity"].employeeId, target: schema["employees"].id }
+        { source: "productivity.employeeId", target: "employees.id" }
       ]
     },
     EmployeeTeams: {
@@ -373,14 +374,14 @@ registerEntityCube('Productivity', {
       relationship: 'hasMany',
       preferredFor: ['Teams'],
       on: [
-        { source: schema["productivity"].employeeId, target: schema["employeeTeams"].employeeId }
+        { source: "productivity.employeeId", target: "employeeTeams.employeeId" }
       ]
     },
     Departments: {
       targetCube: 'Departments',
       relationship: 'belongsTo',
       on: [
-        { source: schema["productivity"].departmentId, target: schema["departments"].id }
+        { source: "productivity.departmentId", target: "departments.id" }
       ]
     }
   },
@@ -398,32 +399,32 @@ registerEntityCube('Productivity', {
       name: 'id',
       title: 'Record ID',
       type: 'number',
-      sql: schema["productivity"].id,
+      column: "productivity.id",
       primaryKey: true
     },
     date: {
       name: 'date',
       title: 'Date',
       type: 'time',
-      sql: schema["productivity"].date
+      column: "productivity.date"
     },
     createdAt: {
       name: 'createdAt',
       title: 'Created At',
       type: 'time',
-      sql: schema["productivity"].createdAt
+      column: "productivity.createdAt"
     },
     isDayOff: {
       name: 'isDayOff',
       title: 'Day Off',
       type: 'boolean',
-      sql: schema["productivity"].daysOff
+      column: "productivity.daysOff"
     },
     happinessIndex: {
       name: 'happinessIndex',
       title: 'Happiness Index',
       type: 'number',
-      sql: schema["productivity"].happinessIndex
+      column: "productivity.happinessIndex"
     },
     happinessLevel: {
       name: 'happinessLevel',
@@ -441,26 +442,26 @@ registerEntityCube('Productivity', {
       name: 'departmentId',
       title: 'Department ID',
       type: 'number',
-      sql: schema["productivity"].departmentId
+      column: "productivity.departmentId"
     },
     employeeId: {
       name: 'employeeId',
       title: 'Employee ID',
       type: 'number',
-      sql: schema["productivity"].employeeId
+      column: "productivity.employeeId"
     },
     linesOfCode: {
       name: 'linesOfCode',
       title: 'Lines of Code',
       type: 'number',
-      sql: schema["productivity"].linesOfCode,
+      column: "productivity.linesOfCode",
       description: 'Raw lines of code for this record'
     },
     pullRequests: {
       name: 'pullRequests',
       title: 'Pull Requests',
       type: 'number',
-      sql: schema["productivity"].pullRequests,
+      column: "productivity.pullRequests",
       description: 'Raw PR count for this record'
     }
   },
@@ -470,21 +471,21 @@ registerEntityCube('Productivity', {
       name: 'count',
       title: 'Total Records',
       type: 'count',
-      sql: schema["productivity"].id,
+      column: "productivity.id",
       drillMembers: ['Productivity.date', 'Employees.name', 'Departments.name']
     },
     recordCount: {
       name: 'recordCount',
       title: 'Record Count',
       type: 'count',
-      sql: schema["productivity"].id,
+      column: "productivity.id",
       drillMembers: ['Productivity.date', 'Employees.name', 'Departments.name']
     },
     workingDaysCount: {
       name: 'workingDaysCount',
       title: 'Working Days',
       type: 'count',
-      sql: schema["productivity"].id,
+      column: "productivity.id",
       filters: [
         () => eq(schema["productivity"].daysOff, false)
       ],
@@ -494,7 +495,7 @@ registerEntityCube('Productivity', {
       name: 'daysOffCount',
       title: 'Days Off',
       type: 'count',
-      sql: schema["productivity"].id,
+      column: "productivity.id",
       filters: [
         () => eq(schema["productivity"].daysOff, true)
       ],
@@ -504,47 +505,47 @@ registerEntityCube('Productivity', {
       name: 'avgLinesOfCode',
       title: 'Average Lines of Code',
       type: 'avg',
-      sql: schema["productivity"].linesOfCode,
+      column: "productivity.linesOfCode",
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.linesOfCode', 'Departments.name']
     },
     totalLinesOfCode: {
       name: 'totalLinesOfCode',
       title: 'Total Lines of Code',
       type: 'sum',
-      sql: schema["productivity"].linesOfCode,
+      column: "productivity.linesOfCode",
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.linesOfCode', 'Departments.name']
     },
     totalPullRequests: {
       name: 'totalPullRequests',
       title: 'Total Pull Requests',
       type: 'sum',
-      sql: schema["productivity"].pullRequests,
+      column: "productivity.pullRequests",
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.pullRequests', 'Departments.name']
     },
     avgPullRequests: {
       name: 'avgPullRequests',
       title: 'Average Pull Requests',
       type: 'avg',
-      sql: schema["productivity"].pullRequests,
+      column: "productivity.pullRequests",
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.pullRequests', 'Departments.name']
     },
     totalDeployments: {
       name: 'totalDeployments',
       title: 'Total Deployments',
       type: 'sum',
-      sql: schema["productivity"].liveDeployments
+      column: "productivity.liveDeployments"
     },
     avgDeployments: {
       name: 'avgDeployments',
       title: 'Average Deployments',
       type: 'avg',
-      sql: schema["productivity"].liveDeployments
+      column: "productivity.liveDeployments"
     },
     avgHappinessIndex: {
       name: 'avgHappinessIndex',
       title: 'Average Happiness',
       type: 'avg',
-      sql: schema["productivity"].happinessIndex,
+      column: "productivity.happinessIndex",
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.happinessIndex', 'Productivity.happinessLevel']
     },
     productivityScore: {
@@ -560,21 +561,21 @@ registerEntityCube('Productivity', {
       name: 'stddevLinesOfCode',
       title: 'Lines of Code Std Dev',
       type: 'stddev',
-      sql: schema["productivity"].linesOfCode,
+      column: "productivity.linesOfCode",
       description: 'Variation in daily code output'
     },
     medianLinesOfCode: {
       name: 'medianLinesOfCode',
       title: 'Median Lines of Code',
       type: 'median',
-      sql: schema["productivity"].linesOfCode,
+      column: "productivity.linesOfCode",
       description: 'Median daily code output'
     },
     p95LinesOfCode: {
       name: 'p95LinesOfCode',
       title: '95th Percentile Lines',
       type: 'p95',
-      sql: schema["productivity"].linesOfCode,
+      column: "productivity.linesOfCode",
       description: 'High performer code output threshold'
     },
     // Statistical measures - Happiness Distribution
@@ -582,14 +583,14 @@ registerEntityCube('Productivity', {
       name: 'stddevHappinessIndex',
       title: 'Happiness Std Dev',
       type: 'stddev',
-      sql: schema["productivity"].happinessIndex,
+      column: "productivity.happinessIndex",
       description: 'Variation in team happiness'
     },
     medianHappinessIndex: {
       name: 'medianHappinessIndex',
       title: 'Median Happiness',
       type: 'median',
-      sql: schema["productivity"].happinessIndex,
+      column: "productivity.happinessIndex",
       description: 'Median happiness score'
     },
     // Statistical measures - Pull Requests
@@ -597,14 +598,14 @@ registerEntityCube('Productivity', {
       name: 'medianPullRequests',
       title: 'Median Pull Requests',
       type: 'median',
-      sql: schema["productivity"].pullRequests,
+      column: "productivity.pullRequests",
       description: 'Median daily pull requests'
     },
     p95PullRequests: {
       name: 'p95PullRequests',
       title: '95th Percentile PRs',
       type: 'p95',
-      sql: schema["productivity"].pullRequests,
+      column: "productivity.pullRequests",
       description: 'High performer PR threshold'
     },
 
@@ -711,24 +712,21 @@ registerEntityCube('TimeEntries', {
   title: 'Time Entries Analytics', 
   description: 'Employee time tracking with allocation types, departments, and billable hours',
   
-  sql: (ctx: QueryContext): BaseQueryDefinition => ({
-    from: schema["timeEntries"],
-    where: eq(schema["timeEntries"].organisationId, ctx.securityContext.organisationId as number)
-  }),
+  tableName: "timeEntries",
 
   joins: {
     Employees: {
       targetCube: 'Employees',
       relationship: 'belongsTo',
       on: [
-        { source: schema["timeEntries"].employeeId, target: schema["employees"].id }
+        { source: "timeEntries.employeeId", target: "employees.id" }
       ]
     },
     Departments: {
       targetCube: 'Departments',
-      relationship: 'belongsTo', 
+      relationship: 'belongsTo',
       on: [
-        { source: schema["timeEntries"].departmentId, target: schema["departments"].id }
+        { source: "timeEntries.departmentId", target: "departments.id" }
       ]
     }
   },
@@ -738,44 +736,44 @@ registerEntityCube('TimeEntries', {
       name: 'id',
       title: 'Time Entry ID',
       type: 'number',
-      sql: schema["timeEntries"].id,
+      column: "timeEntries.id",
       primaryKey: true
     },
     employeeId: {
       name: 'employeeId',
       title: 'Employee ID',
       type: 'number',
-      sql: schema["timeEntries"].employeeId
+      column: "timeEntries.employeeId"
     },
     departmentId: {
       name: 'departmentId', 
       title: 'Department ID',
       type: 'number',
-      sql: schema["timeEntries"].departmentId
+      column: "timeEntries.departmentId"
     },
     allocationType: {
       name: 'allocationType',
       title: 'Allocation Type',
       type: 'string',
-      sql: schema["timeEntries"].allocationType
+      column: "timeEntries.allocationType"
     },
     description: {
       name: 'description',
       title: 'Task Description',
       type: 'string',
-      sql: schema["timeEntries"].description
+      column: "timeEntries.description"
     },
     date: {
       name: 'date',
       title: 'Date',
       type: 'time',
-      sql: schema["timeEntries"].date
+      column: "timeEntries.date"
     },
     createdAt: {
       name: 'createdAt',
       title: 'Created At',
       type: 'time',
-      sql: schema["timeEntries"].createdAt
+      column: "timeEntries.createdAt"
     }
   },
 
@@ -785,7 +783,7 @@ registerEntityCube('TimeEntries', {
       name: 'count',
       title: 'Total Time Entries',
       type: 'count',
-      sql: schema["timeEntries"].id,
+      column: "timeEntries.id",
       description: 'Total number of time entries'
     },
     
@@ -794,27 +792,27 @@ registerEntityCube('TimeEntries', {
       name: 'totalHours',
       title: 'Total Hours',
       type: 'sum',
-      sql: schema["timeEntries"].hours,
+      column: "timeEntries.hours",
       description: 'Sum of all logged hours'
     },
     avgHours: {
       name: 'avgHours',
       title: 'Average Hours per Entry',
       type: 'avg',
-      sql: schema["timeEntries"].hours,
+      column: "timeEntries.hours",
       description: 'Average hours per time entry'
     },
     minHours: {
       name: 'minHours',
       title: 'Minimum Hours',
       type: 'min',
-      sql: schema["timeEntries"].hours
+      column: "timeEntries.hours"
     },
     maxHours: {
       name: 'maxHours',
       title: 'Maximum Hours',
       type: 'max',
-      sql: schema["timeEntries"].hours
+      column: "timeEntries.hours"
     },
     
     // Billable hours measures
@@ -822,14 +820,14 @@ registerEntityCube('TimeEntries', {
       name: 'totalBillableHours',
       title: 'Total Billable Hours',
       type: 'sum',
-      sql: schema["timeEntries"].billableHours,
+      column: "timeEntries.billableHours",
       description: 'Sum of all billable hours'
     },
     avgBillableHours: {
       name: 'avgBillableHours',
       title: 'Average Billable Hours',
       type: 'avg',
-      sql: schema["timeEntries"].billableHours
+      column: "timeEntries.billableHours"
     },
     
     // Allocation-specific measures with filters
@@ -837,7 +835,7 @@ registerEntityCube('TimeEntries', {
       name: 'developmentHours',
       title: 'Development Hours',
       type: 'sum',
-      sql: schema["timeEntries"].hours,
+      column: "timeEntries.hours",
       filters: [
         () => eq(schema["timeEntries"].allocationType, 'development')
       ],
@@ -847,7 +845,7 @@ registerEntityCube('TimeEntries', {
       name: 'meetingHours',
       title: 'Meeting Hours',
       type: 'sum',
-      sql: schema["timeEntries"].hours,
+      column: "timeEntries.hours",
       filters: [
         () => eq(schema["timeEntries"].allocationType, 'meetings')
       ],
@@ -857,7 +855,7 @@ registerEntityCube('TimeEntries', {
       name: 'maintenanceHours',
       title: 'Maintenance Hours',
       type: 'sum',
-      sql: schema["timeEntries"].hours,
+      column: "timeEntries.hours",
       filters: [
         () => eq(schema["timeEntries"].allocationType, 'maintenance')
       ]
@@ -868,20 +866,20 @@ registerEntityCube('TimeEntries', {
       name: 'distinctEmployees',
       title: 'Unique Employees',
       type: 'countDistinct',
-      sql: schema["timeEntries"].employeeId,
+      column: "timeEntries.employeeId",
       description: 'Number of unique employees with time entries'
     },
     distinctDepartments: {
       name: 'distinctDepartments',
       title: 'Unique Departments',
       type: 'countDistinct', 
-      sql: schema["timeEntries"].departmentId
+      column: "timeEntries.departmentId"
     },
     distinctAllocations: {
       name: 'distinctAllocations',
       title: 'Unique Allocation Types',
       type: 'countDistinct',
-      sql: schema["timeEntries"].allocationType
+      column: "timeEntries.allocationType"
     },
     
     // Complex calculated measures
@@ -896,7 +894,7 @@ registerEntityCube('TimeEntries', {
       name: 'avgDailyHours',  
       title: 'Average Daily Hours',
       type: 'avg',
-      sql: schema["timeEntries"].hours,
+      column: "timeEntries.hours",
       description: 'Average hours logged per day'
     }
   }
@@ -909,17 +907,14 @@ registerEntityCube('PREvents', {
   title: 'PR Events',
   description: 'Pull request lifecycle events for funnel analysis',
 
-  sql: (ctx: QueryContext): BaseQueryDefinition => ({
-    from: schema["prEvents"],
-    where: eq(schema["prEvents"].organisationId, ctx.securityContext.organisationId as number)
-  }),
+  tableName: "prEvents",
 
   joins: {
     Employees: {
       targetCube: 'Employees',
       relationship: 'belongsTo',
       on: [
-        { source: schema["prEvents"].employeeId, target: schema["employees"].id }
+        { source: "prEvents.employeeId", target: "employees.id" }
       ]
     }
   },
@@ -929,38 +924,38 @@ registerEntityCube('PREvents', {
       name: 'id',
       title: 'Event ID',
       type: 'number',
-      sql: schema["prEvents"].id,
+      column: "prEvents.id",
       primaryKey: true
     },
     prNumber: {
       name: 'prNumber',
       title: 'PR Number',
       type: 'number',
-      sql: schema["prEvents"].prNumber
+      column: "prEvents.prNumber"
     },
     eventType: {
       name: 'eventType',
       title: 'Event Type',
       type: 'string',
-      sql: schema["prEvents"].eventType
+      column: "prEvents.eventType"
     },
     employeeId: {
       name: 'employeeId',
       title: 'Employee ID',
       type: 'number',
-      sql: schema["prEvents"].employeeId
+      column: "prEvents.employeeId"
     },
     timestamp: {
       name: 'timestamp',
       title: 'Event Timestamp',
       type: 'time',
-      sql: schema["prEvents"].timestamp
+      column: "prEvents.timestamp"
     },
     createdAt: {
       name: 'createdAt',
       title: 'Created At',
       type: 'time',
-      sql: schema["prEvents"].createdAt
+      column: "prEvents.createdAt"
     }
   },
 
@@ -969,21 +964,21 @@ registerEntityCube('PREvents', {
       name: 'count',
       title: 'Event Count',
       type: 'count',
-      sql: schema["prEvents"].id,
+      column: "prEvents.id",
       drillMembers: ['PREvents.prNumber', 'PREvents.eventType', 'PREvents.timestamp', 'Employees.name']
     },
     uniquePRs: {
       name: 'uniquePRs',
       title: 'Unique PRs',
       type: 'countDistinct',
-      sql: schema["prEvents"].prNumber,
+      column: "prEvents.prNumber",
       drillMembers: ['PREvents.prNumber', 'PREvents.eventType', 'PREvents.timestamp']
     },
     uniqueActors: {
       name: 'uniqueActors',
       title: 'Unique Actors',
       type: 'countDistinct',
-      sql: schema["prEvents"].employeeId,
+      column: "prEvents.employeeId",
       drillMembers: ['Employees.name', 'PREvents.prNumber', 'PREvents.eventType']
     }
   },
@@ -1004,17 +999,14 @@ registerEntityCube('Teams', {
   title: 'Team Analytics',
   description: 'Team structure and membership analysis',
 
-  sql: (ctx: QueryContext): BaseQueryDefinition => ({
-    from: schema["teams"],
-    where: eq(schema["teams"].organisationId, ctx.securityContext.organisationId as number)
-  }),
+  tableName: "teams",
 
   joins: {
     Departments: {
       targetCube: 'Departments',
       relationship: 'belongsTo',
       on: [
-        { source: schema["teams"].departmentId, target: schema["departments"].id }
+        { source: "teams.departmentId", target: "departments.id" }
       ]
     },
     EmployeeTeams: {
@@ -1022,7 +1014,7 @@ registerEntityCube('Teams', {
       relationship: 'hasMany',
       preferredFor: ['Productivity'],
       on: [
-        { source: schema["teams"].id, target: schema["employeeTeams"].teamId }
+        { source: "teams.id", target: "employeeTeams.teamId" }
       ]
     }
   },
@@ -1032,32 +1024,32 @@ registerEntityCube('Teams', {
       name: 'id',
       title: 'Team ID',
       type: 'number',
-      sql: schema["teams"].id,
+      column: "teams.id",
       primaryKey: true
     },
     name: {
       name: 'name',
       title: 'Team Name',
       type: 'string',
-      sql: schema["teams"].name
+      column: "teams.name"
     },
     description: {
       name: 'description',
       title: 'Description',
       type: 'string',
-      sql: schema["teams"].description
+      column: "teams.description"
     },
     departmentId: {
       name: 'departmentId',
       title: 'Department ID',
       type: 'number',
-      sql: schema["teams"].departmentId
+      column: "teams.departmentId"
     },
     createdAt: {
       name: 'createdAt',
       title: 'Created At',
       type: 'time',
-      sql: schema["teams"].createdAt
+      column: "teams.createdAt"
     }
   },
 
@@ -1066,7 +1058,7 @@ registerEntityCube('Teams', {
       name: 'count',
       title: 'Total Teams',
       type: 'countDistinct',
-      sql: schema["teams"].id,
+      column: "teams.id",
       drillMembers: ['Teams.name', 'Teams.description', 'Departments.name']
     }
   }
@@ -1079,10 +1071,7 @@ registerEntityCube('EmployeeTeams', {
   title: 'Employee Team Membership',
   description: 'Employee team assignments and roles',
 
-  sql: (ctx: QueryContext): BaseQueryDefinition => ({
-    from: schema["employeeTeams"],
-    where: eq(schema["employeeTeams"].organisationId, ctx.securityContext.organisationId as number)
-  }),
+  tableName: "employeeTeams",
 
   joins: {
     Employees: {
@@ -1090,7 +1079,7 @@ registerEntityCube('EmployeeTeams', {
       relationship: 'belongsTo',
       preferredFor: ['Productivity'],
       on: [
-        { source: schema["employeeTeams"].employeeId, target: schema["employees"].id }
+        { source: "employeeTeams.employeeId", target: "employees.id" }
       ]
     },
     Teams: {
@@ -1098,7 +1087,7 @@ registerEntityCube('EmployeeTeams', {
       relationship: 'belongsTo',
       preferredFor: ['Productivity'],
       on: [
-        { source: schema["employeeTeams"].teamId, target: schema["teams"].id }
+        { source: "employeeTeams.teamId", target: "teams.id" }
       ]
     }
   },
@@ -1116,32 +1105,32 @@ registerEntityCube('EmployeeTeams', {
       name: 'id',
       title: 'Membership ID',
       type: 'number',
-      sql: schema["employeeTeams"].id,
+      column: "employeeTeams.id",
       primaryKey: true
     },
     employeeId: {
       name: 'employeeId',
       title: 'Employee ID',
       type: 'number',
-      sql: schema["employeeTeams"].employeeId
+      column: "employeeTeams.employeeId"
     },
     teamId: {
       name: 'teamId',
       title: 'Team ID',
       type: 'number',
-      sql: schema["employeeTeams"].teamId
+      column: "employeeTeams.teamId"
     },
     role: {
       name: 'role',
       title: 'Team Role',
       type: 'string',
-      sql: schema["employeeTeams"].role
+      column: "employeeTeams.role"
     },
     joinedAt: {
       name: 'joinedAt',
       title: 'Joined Team',
       type: 'time',
-      sql: schema["employeeTeams"].joinedAt
+      column: "employeeTeams.joinedAt"
     }
   },
 
@@ -1150,28 +1139,28 @@ registerEntityCube('EmployeeTeams', {
       name: 'count',
       title: 'Total Memberships',
       type: 'count',
-      sql: schema["employeeTeams"].id,
+      column: "employeeTeams.id",
       drillMembers: ['Employees.name', 'Teams.name', 'EmployeeTeams.role', 'EmployeeTeams.joinedAt']
     },
     uniqueEmployees: {
       name: 'uniqueEmployees',
       title: 'Unique Employees',
       type: 'countDistinct',
-      sql: schema["employeeTeams"].employeeId,
+      column: "employeeTeams.employeeId",
       drillMembers: ['Employees.name', 'Teams.name', 'EmployeeTeams.role']
     },
     uniqueTeams: {
       name: 'uniqueTeams',
       title: 'Unique Teams',
       type: 'countDistinct',
-      sql: schema["employeeTeams"].teamId,
+      column: "employeeTeams.teamId",
       drillMembers: ['Teams.name', 'Employees.name', 'EmployeeTeams.role']
     },
     leadCount: {
       name: 'leadCount',
       title: 'Team Leads',
       type: 'count',
-      sql: schema["employeeTeams"].id,
+      column: "employeeTeams.id",
       filters: [
         () => eq(schema["employeeTeams"].role, 'lead')
       ],
@@ -1185,21 +1174,50 @@ registerEntityCube('EmployeeTeams', {
  * Resolves string targetCube references to lazy Cube proxy lookups.
  * This is where we will later also generate schema and replace strings with functions.
  */
+function resolveColumn(ref: string): AnyColumn {
+  const [tableName, columnName] = ref.split('.')
+  const table = schema[tableName as keyof typeof schema] as unknown as Record<string, AnyColumn>
+  return table[columnName]
+}
+
 function entityCubesToCubes(registry: Map<string, EntityCube>): Cube[] {
   for (const ec of registry.values()) {
-    const { name, joins, ...rest } = ec
+    const { name, joins, tableName, ...rest } = ec
 
-    // Convert EntityCubeJoin -> CubeJoin by resolving targetCube strings
+    // Convert tableName to sql function
+    const table = schema[tableName as keyof typeof schema] as BaseQueryDefinition['from']
+    const sqlFn = (): BaseQueryDefinition => ({ from: table })
+
+    // Convert EntityCubeJoin -> CubeJoin by resolving string refs to schema columns
     const cubeJoins: Record<string, CubeJoin> | undefined = joins
       ? Object.fromEntries(
           Object.entries(joins).map(([key, join]) => [key, {
             ...join,
             targetCube: () => getCube(join.targetCube),
+            on: join.on.map(({ source, target }) => ({
+              source: resolveColumn(source),
+              target: resolveColumn(target),
+            })),
           }])
         )
       : undefined
 
-    const config: Omit<Cube, 'name'> = { ...rest, ...(cubeJoins && { joins: cubeJoins }) }
+    // Resolve column strings to sql references in dimensions and measures
+    // Resolve column strings to sql references in dimensions and measures
+    const dimensions = Object.fromEntries(
+      Object.entries(rest.dimensions).map(([key, dim]) => {
+        const { column, ...dimRest } = dim as EntityDimension & { column?: string }
+        return [key, column ? { ...dimRest, sql: resolveColumn(column) } : dimRest]
+      })
+    ) as Record<string, Dimension>
+    const measures = Object.fromEntries(
+      Object.entries(rest.measures).map(([key, m]) => {
+        const { column, ...mRest } = m as EntityMeasure & { column?: string }
+        return [key, column ? { ...mRest, sql: resolveColumn(column) } : mRest]
+      })
+    ) as Record<string, Measure>
+
+    const config: Omit<Cube, 'name'> = { ...rest, sql: sqlFn, dimensions, measures, ...(cubeJoins && { joins: cubeJoins }) }
     const cube = defineCube(name, config) as Cube
     const proxy = getCube(name)
     Object.assign(proxy, cube)
