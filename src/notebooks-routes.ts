@@ -6,7 +6,7 @@
 import { Hono } from 'hono'
 import { eq, and, asc } from 'drizzle-orm'
 import type { DrizzleDatabase } from 'drizzle-cube/server'
-import { notebooks } from '../schema'
+import { notebooks } from '../drizzle_schema'
 
 interface Variables {
   db: DrizzleDatabase

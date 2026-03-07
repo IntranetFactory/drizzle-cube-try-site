@@ -7,7 +7,7 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import { drizzle as drizzleNeon } from 'drizzle-orm/neon-http'
 import postgres from 'postgres'
 import { neon } from '@neondatabase/serverless'
-import { schema } from '../schema'
+import { schema } from '../drizzle_schema'
 import { executeSeed } from '../src/seed-utils'
 
 // Default connection string for CLI usage

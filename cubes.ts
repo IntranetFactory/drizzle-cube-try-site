@@ -5,8 +5,8 @@
 
 import { eq, sql } from 'drizzle-orm'
 import { defineCube } from 'drizzle-cube/server'
-import type { QueryContext, BaseQueryDefinition, Cube } from 'drizzle-cube/server'
-import * as staticSchema from './schema'
+import type { QueryContext, BaseQueryDefinition, Cube, Dimension, Measure, CubeJoin, Hierarchy } from 'drizzle-cube/server'
+import * as staticSchema from './drizzle_schema'
 import { schemaToJSON, jsonToSchema } from './schemaGenerator'
 
 const t0 = performance.now()
@@ -29,31 +29,49 @@ const t3 = performance.now()
 
 console.log(`schemaToJSON: ${(t1 - t0).toFixed(2)}ms | jsonToSchema: ${(t3 - t2).toFixed(2)}ms`)
 
-// Registry for cubes - stores cubes by name as they are defined
-const cubeRegistry = new Map<string, Cube>()
-const cubeProxies = new Map<string, Cube>()
+// ─── EntityCube: same shape as Cube, will be refined to be fully serializable ───
 
-function getCube(name: string): Cube {
+export interface EntityCube {
+  name: string
+  title?: string
+  description?: string
+  exampleQuestions?: string[]
+  sql: (ctx: QueryContext) => BaseQueryDefinition
+  dimensions: Record<string, Dimension>
+  measures: Record<string, Measure>
+  joins?: Record<string, CubeJoin>
+  hierarchies?: Record<string, Hierarchy>
+  public?: boolean
+  sqlAlias?: string
+  dataSource?: string
+  meta?: Record<string, any>
+}
+
+// Registry for cubes - stores cubes by name as they are defined
+const entityCubeRegistry = new Map<string, EntityCube>()
+const cubeProxies = new Map<string, EntityCube>()
+
+function getCube(name: string): EntityCube {
   let proxy = cubeProxies.get(name)
   if (!proxy) {
-    proxy = {} as Cube
+    proxy = {} as EntityCube
     cubeProxies.set(name, proxy)
   }
   return proxy
 }
 
-function registerCube(name: string, config: Parameters<typeof defineCube>[1]): Cube {
-  const cube = defineCube(name, config) as Cube
+function registerEntityCube(name: string, config: Omit<EntityCube, 'name'>): EntityCube {
+  const cube: EntityCube = { name, ...config }
   const proxy = getCube(name)
   Object.assign(proxy, cube)
-  cubeRegistry.set(name, proxy)
+  entityCubeRegistry.set(name, proxy)
   return proxy
 }
 
 /**
  * Employees cube - employee analytics (single table)
  */
-registerCube('Employees', {
+registerEntityCube('Employees', {
   title: 'Employee Analytics',
   description: 'Employee data and metrics',
   
@@ -236,7 +254,7 @@ registerCube('Employees', {
 /**
  * Departments cube - department-level analytics (single table)
  */
-registerCube('Departments', {
+registerEntityCube('Departments', {
   title: 'Department Analytics',
   description: 'Department-level metrics and budget analysis',
   
@@ -321,7 +339,7 @@ registerCube('Departments', {
 /**
  * Productivity cube - productivity metrics with time dimensions
  */
-registerCube('Productivity', {
+registerEntityCube('Productivity', {
   title: 'Productivity Analytics',
   description: 'Daily productivity metrics including code output and deployments',
   
@@ -679,7 +697,7 @@ registerCube('Productivity', {
 /**
  * Time Entries cube - time tracking analytics with allocation types
  */
-registerCube('TimeEntries', {
+registerEntityCube('TimeEntries', {
   title: 'Time Entries Analytics', 
   description: 'Employee time tracking with allocation types, departments, and billable hours',
   
@@ -877,7 +895,7 @@ registerCube('TimeEntries', {
 /**
  * PR Events cube - PR lifecycle events for funnel analysis
  */
-registerCube('PREvents', {
+registerEntityCube('PREvents', {
   title: 'PR Events',
   description: 'Pull request lifecycle events for funnel analysis',
 
@@ -972,7 +990,7 @@ registerCube('PREvents', {
 /**
  * Teams cube - team analytics
  */
-registerCube('Teams', {
+registerEntityCube('Teams', {
   title: 'Team Analytics',
   description: 'Team structure and membership analysis',
 
@@ -1047,7 +1065,7 @@ registerCube('Teams', {
 /**
  * EmployeeTeams cube - junction table for many-to-many analysis
  */
-registerCube('EmployeeTeams', {
+registerEntityCube('EmployeeTeams', {
   title: 'Employee Team Membership',
   description: 'Employee team assignments and roles',
 
@@ -1153,6 +1171,15 @@ registerCube('EmployeeTeams', {
 })
 
 /**
- * All cubes for registration
+ * Convert EntityCube registry to Cube[] via defineCube.
+ * This is where we will later generate schema and replace strings with functions.
  */
-export const allCubes: Cube[] = Array.from(cubeRegistry.values())
+function entityCubesToCubes(registry: Map<string, EntityCube>): Cube[] {
+  return Array.from(registry.values()).map(ec => {
+    const { name, ...config } = ec
+    return defineCube(name, config) as Cube
+  })
+}
+
+export { schema }
+export const allCubes: Cube[] = entityCubesToCubes(entityCubeRegistry)

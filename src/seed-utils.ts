@@ -5,7 +5,7 @@
  * Enhanced with 100 employees, 16 teams, and global office distribution
  */
 
-import { employees, departments, productivity, timeEntries, prEvents, teams, employeeTeams, analyticsPages, notebooks, settings } from '../schema'
+import { employees, departments, productivity, timeEntries, prEvents, teams, employeeTeams, analyticsPages, notebooks, settings } from '../drizzle_schema'
 import { eq, ne } from 'drizzle-orm'
 import { productivityDashboardConfig } from './dashboard-config'
 import sampleNotebookData from './notebook-seed-config.json'

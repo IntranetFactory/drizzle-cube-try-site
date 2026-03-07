@@ -6,7 +6,7 @@
 import { Hono } from 'hono'
 import { eq, and, asc } from 'drizzle-orm'
 import type { DrizzleDatabase } from 'drizzle-cube/server'
-import { analyticsPages } from '../schema'
+import { analyticsPages } from '../drizzle_schema'
 import { productivityDashboardConfig } from './dashboard-config'
 
 interface Variables {
