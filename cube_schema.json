@@ -1,0 +1,444 @@
+{
+  "employees": {
+    "tableName": "employees",
+    "columns": [
+      {
+        "key": "id",
+        "name": "id",
+        "type": "integer",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": true,
+        "generatedIdentity": "always"
+      },
+      {
+        "key": "name",
+        "name": "name",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "email",
+        "name": "email",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "department_id",
+        "name": "department_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "active",
+        "name": "active",
+        "type": "boolean",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "created_at",
+        "name": "created_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "city",
+        "name": "city",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "region",
+        "name": "region",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "country",
+        "name": "country",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "latitude",
+        "name": "latitude",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "longitude",
+        "name": "longitude",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "salary",
+        "name": "salary",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      }
+    ]
+  },
+  "departments": {
+    "tableName": "departments",
+    "columns": [
+      {
+        "key": "id",
+        "name": "id",
+        "type": "integer",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": true,
+        "generatedIdentity": "always"
+      },
+      {
+        "key": "name",
+        "name": "name",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "budget",
+        "name": "budget",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      }
+    ]
+  },
+  "productivity": {
+    "tableName": "productivity",
+    "columns": [
+      {
+        "key": "id",
+        "name": "id",
+        "type": "integer",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": true,
+        "generatedIdentity": "always"
+      },
+      {
+        "key": "date",
+        "name": "date",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "created_at",
+        "name": "created_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "days_off",
+        "name": "days_off",
+        "type": "boolean",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "happiness_index",
+        "name": "happiness_index",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "department_id",
+        "name": "department_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "employee_id",
+        "name": "employee_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "lines_of_code",
+        "name": "lines_of_code",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "pull_requests",
+        "name": "pull_requests",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "live_deployments",
+        "name": "live_deployments",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      }
+    ]
+  },
+  "time_entries": {
+    "tableName": "time_entries",
+    "columns": [
+      {
+        "key": "id",
+        "name": "id",
+        "type": "integer",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": true,
+        "generatedIdentity": "always"
+      },
+      {
+        "key": "employee_id",
+        "name": "employee_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "department_id",
+        "name": "department_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "allocation_type",
+        "name": "allocation_type",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "description",
+        "name": "description",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "date",
+        "name": "date",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "created_at",
+        "name": "created_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "hours",
+        "name": "hours",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "billable_hours",
+        "name": "billable_hours",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      }
+    ]
+  },
+  "pr_events": {
+    "tableName": "pr_events",
+    "columns": [
+      {
+        "key": "id",
+        "name": "id",
+        "type": "integer",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": true,
+        "generatedIdentity": "always"
+      },
+      {
+        "key": "pr_number",
+        "name": "pr_number",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "event_type",
+        "name": "event_type",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "employee_id",
+        "name": "employee_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "timestamp",
+        "name": "timestamp",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "created_at",
+        "name": "created_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      }
+    ]
+  },
+  "teams": {
+    "tableName": "teams",
+    "columns": [
+      {
+        "key": "id",
+        "name": "id",
+        "type": "integer",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": true,
+        "generatedIdentity": "always"
+      },
+      {
+        "key": "name",
+        "name": "name",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "description",
+        "name": "description",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "department_id",
+        "name": "department_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "created_at",
+        "name": "created_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      }
+    ]
+  },
+  "employee_teams": {
+    "tableName": "employee_teams",
+    "columns": [
+      {
+        "key": "id",
+        "name": "id",
+        "type": "integer",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": true,
+        "generatedIdentity": "always"
+      },
+      {
+        "key": "employee_id",
+        "name": "employee_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "team_id",
+        "name": "team_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "role",
+        "name": "role",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "joined_at",
+        "name": "joined_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      }
+    ]
+  }
+}
