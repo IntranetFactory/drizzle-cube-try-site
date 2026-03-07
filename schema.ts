@@ -3,6 +3,7 @@
  * This demonstrates a typical business analytics schema with employees and departments
  */
 
+const _schemaStart = performance.now()
 import { pgTable, integer, text, real, boolean, timestamp, jsonb, index } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
@@ -295,3 +296,5 @@ export const schema = {
 }
 
 export type Schema = typeof schema
+
+console.log(`schema.ts execution: ${(performance.now() - _schemaStart).toFixed(2)}ms`)

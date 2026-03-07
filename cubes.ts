@@ -6,7 +6,28 @@
 import { eq, sql } from 'drizzle-orm'
 import { defineCube } from 'drizzle-cube/server'
 import type { QueryContext, BaseQueryDefinition, Cube } from 'drizzle-cube/server'
-import * as schema from './schema'
+import * as staticSchema from './schema'
+import { schemaToJSON, jsonToSchema } from './schemaGenerator'
+
+const t0 = performance.now()
+const schemaJSON = schemaToJSON(staticSchema as unknown as Record<string, unknown>)
+const t1 = performance.now()
+
+// Persist schema as JSON when running in Node.js (skipped in Cloudflare Workers)
+if (typeof process !== 'undefined' && process.versions?.node) {
+  import('fs').then(fs => {
+    import('url').then(url => {
+      const dir = url.fileURLToPath(new URL('.', import.meta.url))
+      fs.writeFileSync(dir + 'schema.json', JSON.stringify(schemaJSON, null, 2))
+    })
+  })
+}
+
+const t2 = performance.now()
+const schema = jsonToSchema(schemaJSON) as unknown as typeof staticSchema
+const t3 = performance.now()
+
+console.log(`schemaToJSON: ${(t1 - t0).toFixed(2)}ms | jsonToSchema: ${(t3 - t2).toFixed(2)}ms`)
 
 // Forward declarations for circular dependency resolution
 let employeesCube: Cube

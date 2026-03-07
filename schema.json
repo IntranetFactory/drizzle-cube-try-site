@@ -1,0 +1,723 @@
+{
+  "analyticsPages": {
+    "tableName": "analytics_pages",
+    "columns": [
+      {
+        "key": "id",
+        "name": "id",
+        "type": "integer",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": true,
+        "generatedIdentity": "always"
+      },
+      {
+        "key": "name",
+        "name": "name",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "description",
+        "name": "description",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "organisationId",
+        "name": "organisation_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "config",
+        "name": "config",
+        "type": "jsonb",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "order",
+        "name": "order",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultValue": 0
+      },
+      {
+        "key": "isActive",
+        "name": "is_active",
+        "type": "boolean",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultValue": true
+      },
+      {
+        "key": "createdAt",
+        "name": "created_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultNow": true
+      },
+      {
+        "key": "updatedAt",
+        "name": "updated_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultNow": true
+      }
+    ]
+  },
+  "departments": {
+    "tableName": "departments",
+    "columns": [
+      {
+        "key": "id",
+        "name": "id",
+        "type": "integer",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": true,
+        "generatedIdentity": "always"
+      },
+      {
+        "key": "name",
+        "name": "name",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "organisationId",
+        "name": "organisation_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "budget",
+        "name": "budget",
+        "type": "real",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      }
+    ]
+  },
+  "employeeTeams": {
+    "tableName": "employee_teams",
+    "columns": [
+      {
+        "key": "id",
+        "name": "id",
+        "type": "integer",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": true,
+        "generatedIdentity": "always"
+      },
+      {
+        "key": "employeeId",
+        "name": "employee_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "teamId",
+        "name": "team_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "role",
+        "name": "role",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "joinedAt",
+        "name": "joined_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultNow": true
+      },
+      {
+        "key": "organisationId",
+        "name": "organisation_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      }
+    ]
+  },
+  "employees": {
+    "tableName": "employees",
+    "columns": [
+      {
+        "key": "id",
+        "name": "id",
+        "type": "integer",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": true,
+        "generatedIdentity": "always"
+      },
+      {
+        "key": "name",
+        "name": "name",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "email",
+        "name": "email",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "active",
+        "name": "active",
+        "type": "boolean",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultValue": true
+      },
+      {
+        "key": "departmentId",
+        "name": "department_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "organisationId",
+        "name": "organisation_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "salary",
+        "name": "salary",
+        "type": "real",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "city",
+        "name": "city",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "region",
+        "name": "region",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "country",
+        "name": "country",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "latitude",
+        "name": "latitude",
+        "type": "real",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "longitude",
+        "name": "longitude",
+        "type": "real",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "createdAt",
+        "name": "created_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultNow": true
+      }
+    ]
+  },
+  "notebooks": {
+    "tableName": "notebooks",
+    "columns": [
+      {
+        "key": "id",
+        "name": "id",
+        "type": "integer",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": true,
+        "generatedIdentity": "always"
+      },
+      {
+        "key": "name",
+        "name": "name",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "description",
+        "name": "description",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "organisationId",
+        "name": "organisation_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "config",
+        "name": "config",
+        "type": "jsonb",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "order",
+        "name": "order",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultValue": 0
+      },
+      {
+        "key": "isActive",
+        "name": "is_active",
+        "type": "boolean",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultValue": true
+      },
+      {
+        "key": "createdAt",
+        "name": "created_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultNow": true
+      },
+      {
+        "key": "updatedAt",
+        "name": "updated_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultNow": true
+      }
+    ]
+  },
+  "prEvents": {
+    "tableName": "pr_events",
+    "columns": [
+      {
+        "key": "id",
+        "name": "id",
+        "type": "integer",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": true,
+        "generatedIdentity": "always"
+      },
+      {
+        "key": "prNumber",
+        "name": "pr_number",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "eventType",
+        "name": "event_type",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "employeeId",
+        "name": "employee_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "organisationId",
+        "name": "organisation_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "timestamp",
+        "name": "timestamp",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "createdAt",
+        "name": "created_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultNow": true
+      }
+    ]
+  },
+  "productivity": {
+    "tableName": "productivity",
+    "columns": [
+      {
+        "key": "id",
+        "name": "id",
+        "type": "integer",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": true,
+        "generatedIdentity": "always"
+      },
+      {
+        "key": "employeeId",
+        "name": "employee_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "departmentId",
+        "name": "department_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "date",
+        "name": "date",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "linesOfCode",
+        "name": "lines_of_code",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultValue": 0
+      },
+      {
+        "key": "pullRequests",
+        "name": "pull_requests",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultValue": 0
+      },
+      {
+        "key": "liveDeployments",
+        "name": "live_deployments",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultValue": 0
+      },
+      {
+        "key": "daysOff",
+        "name": "days_off",
+        "type": "boolean",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultValue": false
+      },
+      {
+        "key": "happinessIndex",
+        "name": "happiness_index",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "organisationId",
+        "name": "organisation_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "createdAt",
+        "name": "created_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultNow": true
+      }
+    ]
+  },
+  "settings": {
+    "tableName": "settings",
+    "columns": [
+      {
+        "key": "key",
+        "name": "key",
+        "type": "text",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "value",
+        "name": "value",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "organisationId",
+        "name": "organisation_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "createdAt",
+        "name": "created_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultNow": true
+      },
+      {
+        "key": "updatedAt",
+        "name": "updated_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultNow": true
+      }
+    ]
+  },
+  "teams": {
+    "tableName": "teams",
+    "columns": [
+      {
+        "key": "id",
+        "name": "id",
+        "type": "integer",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": true,
+        "generatedIdentity": "always"
+      },
+      {
+        "key": "name",
+        "name": "name",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "description",
+        "name": "description",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "departmentId",
+        "name": "department_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "organisationId",
+        "name": "organisation_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "createdAt",
+        "name": "created_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultNow": true
+      }
+    ]
+  },
+  "timeEntries": {
+    "tableName": "time_entries",
+    "columns": [
+      {
+        "key": "id",
+        "name": "id",
+        "type": "integer",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": true,
+        "generatedIdentity": "always"
+      },
+      {
+        "key": "employeeId",
+        "name": "employee_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "departmentId",
+        "name": "department_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "date",
+        "name": "date",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "allocationType",
+        "name": "allocation_type",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "hours",
+        "name": "hours",
+        "type": "real",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "description",
+        "name": "description",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "billableHours",
+        "name": "billable_hours",
+        "type": "real",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultValue": 0
+      },
+      {
+        "key": "organisationId",
+        "name": "organisation_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": true,
+        "hasDefault": false
+      },
+      {
+        "key": "createdAt",
+        "name": "created_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": true,
+        "defaultNow": true
+      }
+    ]
+  }
+}
