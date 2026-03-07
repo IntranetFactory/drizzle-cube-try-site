@@ -5,7 +5,8 @@
 
 import { eq, sql } from 'drizzle-orm'
 import { defineCube } from 'drizzle-cube/server'
-import type { QueryContext, BaseQueryDefinition, Cube, Dimension, Measure, CubeJoin, Hierarchy } from 'drizzle-cube/server'
+import type { QueryContext, BaseQueryDefinition, Cube, Dimension, Measure, CubeJoin, CubeRelationship, Hierarchy } from 'drizzle-cube/server'
+import type { AnyColumn, SQL } from 'drizzle-orm'
 import * as staticSchema from './drizzle_schema'
 import { schemaToJSON, jsonToSchema } from './schemaGenerator'
 
@@ -31,6 +32,14 @@ console.log(`schemaToJSON: ${(t1 - t0).toFixed(2)}ms | jsonToSchema: ${(t3 - t2)
 
 // ─── EntityCube: same shape as Cube, will be refined to be fully serializable ───
 
+export interface EntityCubeJoin {
+  targetCube: string
+  relationship: CubeRelationship
+  on: Array<{ source: AnyColumn; target: AnyColumn; as?: (source: AnyColumn, target: AnyColumn) => SQL }>
+  sqlJoinType?: 'inner' | 'left' | 'right' | 'full'
+  preferredFor?: string[]
+}
+
 export interface EntityCube {
   name: string
   title?: string
@@ -39,7 +48,7 @@ export interface EntityCube {
   sql: (ctx: QueryContext) => BaseQueryDefinition
   dimensions: Record<string, Dimension>
   measures: Record<string, Measure>
-  joins?: Record<string, CubeJoin>
+  joins?: Record<string, EntityCubeJoin>
   hierarchies?: Record<string, Hierarchy>
   public?: boolean
   sqlAlias?: string
@@ -47,24 +56,25 @@ export interface EntityCube {
   meta?: Record<string, any>
 }
 
-// Registry for cubes - stores cubes by name as they are defined
+// EntityCube registry - simple storage, no proxy handling needed
 const entityCubeRegistry = new Map<string, EntityCube>()
-const cubeProxies = new Map<string, EntityCube>()
-
-function getCube(name: string): EntityCube {
-  let proxy = cubeProxies.get(name)
-  if (!proxy) {
-    proxy = {} as EntityCube
-    cubeProxies.set(name, proxy)
-  }
-  return proxy
-}
 
 function registerEntityCube(name: string, config: Omit<EntityCube, 'name'>): EntityCube {
   const cube: EntityCube = { name, ...config }
-  const proxy = getCube(name)
-  Object.assign(proxy, cube)
-  entityCubeRegistry.set(name, proxy)
+  entityCubeRegistry.set(name, cube)
+  return cube
+}
+
+// Cube registry - handles proxy objects for lazy targetCube resolution
+const cubeRegistry = new Map<string, Cube>()
+const cubeProxies = new Map<string, Cube>()
+
+function getCube(name: string): Cube {
+  let proxy = cubeProxies.get(name)
+  if (!proxy) {
+    proxy = {} as Cube
+    cubeProxies.set(name, proxy)
+  }
   return proxy
 }
 
@@ -83,35 +93,35 @@ registerEntityCube('Employees', {
   // Cube-level joins for cross-cube queries
   joins: {
     Departments: {
-      targetCube: () => getCube('Departments'),
+      targetCube: 'Departments',
       relationship: 'belongsTo',
       on: [
         { source: schema["employees"].departmentId, target: schema["departments"].id }
       ]
     },
     Productivity: {
-      targetCube: () => getCube('Productivity'),
+      targetCube: 'Productivity',
       relationship: 'hasMany',
       on: [
         { source: schema["employees"].id, target: schema["productivity"].employeeId }
       ]
     },
     TimeEntries: {
-      targetCube: () => getCube('TimeEntries'),
+      targetCube: 'TimeEntries',
       relationship: 'hasMany',
       on: [
         { source: schema["employees"].id, target: schema["timeEntries"].employeeId }
       ]
     },
     PREvents: {
-      targetCube: () => getCube('PREvents'),
+      targetCube: 'PREvents',
       relationship: 'hasMany',
       on: [
         { source: schema["employees"].id, target: schema["prEvents"].employeeId }
       ]
     },
     EmployeeTeams: {
-      targetCube: () => getCube('EmployeeTeams'),
+      targetCube: 'EmployeeTeams',
       relationship: 'hasMany',
       preferredFor: ['Teams'],
       on: [
@@ -266,28 +276,28 @@ registerEntityCube('Departments', {
   // Cube-level joins for cross-cube queries
   joins: {
     Employees: {
-      targetCube: () => getCube('Employees'),
+      targetCube: 'Employees',
       relationship: 'hasMany',
       on: [
         { source: schema["departments"].id, target: schema["employees"].departmentId }
       ]
     },
     TimeEntries: {
-      targetCube: () => getCube('TimeEntries'),
+      targetCube: 'TimeEntries',
       relationship: 'hasMany',
       on: [
         { source: schema["departments"].id, target: schema["timeEntries"].departmentId }
       ]
     },
     Productivity: {
-      targetCube: () => getCube('Productivity'),
+      targetCube: 'Productivity',
       relationship: 'hasMany',
       on: [
         { source: schema["departments"].id, target: schema["productivity"].departmentId }
       ]
     },
     Teams: {
-      targetCube: () => getCube('Teams'),
+      targetCube: 'Teams',
       relationship: 'hasMany',
       on: [
         { source: schema["departments"].id, target: schema["teams"].departmentId }
@@ -351,7 +361,7 @@ registerEntityCube('Productivity', {
   // Cube-level joins for multi-cube queries
   joins: {
     Employees: {
-      targetCube: () => getCube('Employees'),
+      targetCube: 'Employees',
       relationship: 'belongsTo',
       preferredFor: ['Teams'],
       on: [
@@ -359,7 +369,7 @@ registerEntityCube('Productivity', {
       ]
     },
     EmployeeTeams: {
-      targetCube: () => getCube('EmployeeTeams'),
+      targetCube: 'EmployeeTeams',
       relationship: 'hasMany',
       preferredFor: ['Teams'],
       on: [
@@ -367,7 +377,7 @@ registerEntityCube('Productivity', {
       ]
     },
     Departments: {
-      targetCube: () => getCube('Departments'),
+      targetCube: 'Departments',
       relationship: 'belongsTo',
       on: [
         { source: schema["productivity"].departmentId, target: schema["departments"].id }
@@ -708,14 +718,14 @@ registerEntityCube('TimeEntries', {
 
   joins: {
     Employees: {
-      targetCube: () => getCube('Employees'),
+      targetCube: 'Employees',
       relationship: 'belongsTo',
       on: [
         { source: schema["timeEntries"].employeeId, target: schema["employees"].id }
       ]
     },
     Departments: {
-      targetCube: () => getCube('Departments'),
+      targetCube: 'Departments',
       relationship: 'belongsTo', 
       on: [
         { source: schema["timeEntries"].departmentId, target: schema["departments"].id }
@@ -906,7 +916,7 @@ registerEntityCube('PREvents', {
 
   joins: {
     Employees: {
-      targetCube: () => getCube('Employees'),
+      targetCube: 'Employees',
       relationship: 'belongsTo',
       on: [
         { source: schema["prEvents"].employeeId, target: schema["employees"].id }
@@ -1001,14 +1011,14 @@ registerEntityCube('Teams', {
 
   joins: {
     Departments: {
-      targetCube: () => getCube('Departments'),
+      targetCube: 'Departments',
       relationship: 'belongsTo',
       on: [
         { source: schema["teams"].departmentId, target: schema["departments"].id }
       ]
     },
     EmployeeTeams: {
-      targetCube: () => getCube('EmployeeTeams'),
+      targetCube: 'EmployeeTeams',
       relationship: 'hasMany',
       preferredFor: ['Productivity'],
       on: [
@@ -1076,7 +1086,7 @@ registerEntityCube('EmployeeTeams', {
 
   joins: {
     Employees: {
-      targetCube: () => getCube('Employees'),
+      targetCube: 'Employees',
       relationship: 'belongsTo',
       preferredFor: ['Productivity'],
       on: [
@@ -1084,7 +1094,7 @@ registerEntityCube('EmployeeTeams', {
       ]
     },
     Teams: {
-      targetCube: () => getCube('Teams'),
+      targetCube: 'Teams',
       relationship: 'belongsTo',
       preferredFor: ['Productivity'],
       on: [
@@ -1172,13 +1182,31 @@ registerEntityCube('EmployeeTeams', {
 
 /**
  * Convert EntityCube registry to Cube[] via defineCube.
- * This is where we will later generate schema and replace strings with functions.
+ * Resolves string targetCube references to lazy Cube proxy lookups.
+ * This is where we will later also generate schema and replace strings with functions.
  */
 function entityCubesToCubes(registry: Map<string, EntityCube>): Cube[] {
-  return Array.from(registry.values()).map(ec => {
-    const { name, ...config } = ec
-    return defineCube(name, config) as Cube
-  })
+  for (const ec of registry.values()) {
+    const { name, joins, ...rest } = ec
+
+    // Convert EntityCubeJoin -> CubeJoin by resolving targetCube strings
+    const cubeJoins: Record<string, CubeJoin> | undefined = joins
+      ? Object.fromEntries(
+          Object.entries(joins).map(([key, join]) => [key, {
+            ...join,
+            targetCube: () => getCube(join.targetCube),
+          }])
+        )
+      : undefined
+
+    const config: Omit<Cube, 'name'> = { ...rest, ...(cubeJoins && { joins: cubeJoins }) }
+    const cube = defineCube(name, config) as Cube
+    const proxy = getCube(name)
+    Object.assign(proxy, cube)
+    cubeRegistry.set(name, proxy)
+  }
+
+  return Array.from(cubeRegistry.values())
 }
 
 export { schema }
