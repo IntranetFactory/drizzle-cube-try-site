@@ -29,19 +29,31 @@ const t3 = performance.now()
 
 console.log(`schemaToJSON: ${(t1 - t0).toFixed(2)}ms | jsonToSchema: ${(t3 - t2).toFixed(2)}ms`)
 
-// Forward declarations for circular dependency resolution
-let employeesCube: Cube
-let departmentsCube: Cube
-let productivityCube: Cube
-let timeEntriesCube: Cube
-let prEventsCube: Cube
-let teamsCube: Cube
-let employeeTeamsCube: Cube
+// Registry for cubes - stores cubes by name as they are defined
+const cubeRegistry = new Map<string, Cube>()
+const cubeProxies = new Map<string, Cube>()
+
+function getCube(name: string): Cube {
+  let proxy = cubeProxies.get(name)
+  if (!proxy) {
+    proxy = {} as Cube
+    cubeProxies.set(name, proxy)
+  }
+  return proxy
+}
+
+function registerCube(name: string, config: Parameters<typeof defineCube>[1]): Cube {
+  const cube = defineCube(name, config) as Cube
+  const proxy = getCube(name)
+  Object.assign(proxy, cube)
+  cubeRegistry.set(name, proxy)
+  return proxy
+}
 
 /**
  * Employees cube - employee analytics (single table)
  */
-employeesCube = defineCube('Employees', {
+registerCube('Employees', {
   title: 'Employee Analytics',
   description: 'Employee data and metrics',
   
@@ -53,35 +65,35 @@ employeesCube = defineCube('Employees', {
   // Cube-level joins for cross-cube queries
   joins: {
     Departments: {
-      targetCube: () => departmentsCube,
+      targetCube: () => getCube('Departments'),
       relationship: 'belongsTo',
       on: [
         { source: schema["employees"].departmentId, target: schema["departments"].id }
       ]
     },
     Productivity: {
-      targetCube: () => productivityCube,
+      targetCube: () => getCube('Productivity'),
       relationship: 'hasMany',
       on: [
         { source: schema["employees"].id, target: schema["productivity"].employeeId }
       ]
     },
     TimeEntries: {
-      targetCube: () => timeEntriesCube,
+      targetCube: () => getCube('TimeEntries'),
       relationship: 'hasMany',
       on: [
         { source: schema["employees"].id, target: schema["timeEntries"].employeeId }
       ]
     },
     PREvents: {
-      targetCube: () => prEventsCube,
+      targetCube: () => getCube('PREvents'),
       relationship: 'hasMany',
       on: [
         { source: schema["employees"].id, target: schema["prEvents"].employeeId }
       ]
     },
     EmployeeTeams: {
-      targetCube: () => employeeTeamsCube,
+      targetCube: () => getCube('EmployeeTeams'),
       relationship: 'hasMany',
       preferredFor: ['Teams'],
       on: [
@@ -218,17 +230,13 @@ employeesCube = defineCube('Employees', {
       description: 'Standard deviation of salaries'
     }
   }
-}) as Cube
-
-console.log("START---");
-//console.log(schema["employees"])
-//console.log(employeesCube)
+})
 
 
 /**
  * Departments cube - department-level analytics (single table)
  */
-departmentsCube = defineCube('Departments', {
+registerCube('Departments', {
   title: 'Department Analytics',
   description: 'Department-level metrics and budget analysis',
   
@@ -240,28 +248,28 @@ departmentsCube = defineCube('Departments', {
   // Cube-level joins for cross-cube queries
   joins: {
     Employees: {
-      targetCube: () => employeesCube,
+      targetCube: () => getCube('Employees'),
       relationship: 'hasMany',
       on: [
         { source: schema["departments"].id, target: schema["employees"].departmentId }
       ]
     },
     TimeEntries: {
-      targetCube: () => timeEntriesCube,
+      targetCube: () => getCube('TimeEntries'),
       relationship: 'hasMany',
       on: [
         { source: schema["departments"].id, target: schema["timeEntries"].departmentId }
       ]
     },
     Productivity: {
-      targetCube: () => productivityCube,
+      targetCube: () => getCube('Productivity'),
       relationship: 'hasMany',
       on: [
         { source: schema["departments"].id, target: schema["productivity"].departmentId }
       ]
     },
     Teams: {
-      targetCube: () => teamsCube,
+      targetCube: () => getCube('Teams'),
       relationship: 'hasMany',
       on: [
         { source: schema["departments"].id, target: schema["teams"].departmentId }
@@ -308,12 +316,12 @@ departmentsCube = defineCube('Departments', {
       drillMembers: ['Departments.name']
     }
   }
-}) as Cube
+})
 
 /**
  * Productivity cube - productivity metrics with time dimensions
  */
-productivityCube = defineCube('Productivity', {
+registerCube('Productivity', {
   title: 'Productivity Analytics',
   description: 'Daily productivity metrics including code output and deployments',
   
@@ -325,7 +333,7 @@ productivityCube = defineCube('Productivity', {
   // Cube-level joins for multi-cube queries
   joins: {
     Employees: {
-      targetCube: () => employeesCube,
+      targetCube: () => getCube('Employees'),
       relationship: 'belongsTo',
       preferredFor: ['Teams'],
       on: [
@@ -333,7 +341,7 @@ productivityCube = defineCube('Productivity', {
       ]
     },
     EmployeeTeams: {
-      targetCube: () => employeeTeamsCube,
+      targetCube: () => getCube('EmployeeTeams'),
       relationship: 'hasMany',
       preferredFor: ['Teams'],
       on: [
@@ -341,7 +349,7 @@ productivityCube = defineCube('Productivity', {
       ]
     },
     Departments: {
-      targetCube: () => departmentsCube,
+      targetCube: () => getCube('Departments'),
       relationship: 'belongsTo',
       on: [
         { source: schema["productivity"].departmentId, target: schema["departments"].id }
@@ -666,12 +674,12 @@ productivityCube = defineCube('Productivity', {
       }
     }
   }
-}) as Cube
+})
 
 /**
  * Time Entries cube - time tracking analytics with allocation types
  */
-timeEntriesCube = defineCube('TimeEntries', {
+registerCube('TimeEntries', {
   title: 'Time Entries Analytics', 
   description: 'Employee time tracking with allocation types, departments, and billable hours',
   
@@ -682,14 +690,14 @@ timeEntriesCube = defineCube('TimeEntries', {
 
   joins: {
     Employees: {
-      targetCube: () => employeesCube,
+      targetCube: () => getCube('Employees'),
       relationship: 'belongsTo',
       on: [
         { source: schema["timeEntries"].employeeId, target: schema["employees"].id }
       ]
     },
     Departments: {
-      targetCube: () => departmentsCube,
+      targetCube: () => getCube('Departments'),
       relationship: 'belongsTo', 
       on: [
         { source: schema["timeEntries"].departmentId, target: schema["departments"].id }
@@ -864,12 +872,12 @@ timeEntriesCube = defineCube('TimeEntries', {
       description: 'Average hours logged per day'
     }
   }
-}) as Cube
+})
 
 /**
  * PR Events cube - PR lifecycle events for funnel analysis
  */
-prEventsCube = defineCube('PREvents', {
+registerCube('PREvents', {
   title: 'PR Events',
   description: 'Pull request lifecycle events for funnel analysis',
 
@@ -880,7 +888,7 @@ prEventsCube = defineCube('PREvents', {
 
   joins: {
     Employees: {
-      targetCube: () => employeesCube,
+      targetCube: () => getCube('Employees'),
       relationship: 'belongsTo',
       on: [
         { source: schema["prEvents"].employeeId, target: schema["employees"].id }
@@ -959,12 +967,12 @@ prEventsCube = defineCube('PREvents', {
       timeDimension: 'PREvents.timestamp'
     }
   }
-}) as Cube
+})
 
 /**
  * Teams cube - team analytics
  */
-teamsCube = defineCube('Teams', {
+registerCube('Teams', {
   title: 'Team Analytics',
   description: 'Team structure and membership analysis',
 
@@ -975,14 +983,14 @@ teamsCube = defineCube('Teams', {
 
   joins: {
     Departments: {
-      targetCube: () => departmentsCube,
+      targetCube: () => getCube('Departments'),
       relationship: 'belongsTo',
       on: [
         { source: schema["teams"].departmentId, target: schema["departments"].id }
       ]
     },
     EmployeeTeams: {
-      targetCube: () => employeeTeamsCube,
+      targetCube: () => getCube('EmployeeTeams'),
       relationship: 'hasMany',
       preferredFor: ['Productivity'],
       on: [
@@ -1034,12 +1042,12 @@ teamsCube = defineCube('Teams', {
       drillMembers: ['Teams.name', 'Teams.description', 'Departments.name']
     }
   }
-}) as Cube
+})
 
 /**
  * EmployeeTeams cube - junction table for many-to-many analysis
  */
-employeeTeamsCube = defineCube('EmployeeTeams', {
+registerCube('EmployeeTeams', {
   title: 'Employee Team Membership',
   description: 'Employee team assignments and roles',
 
@@ -1050,7 +1058,7 @@ employeeTeamsCube = defineCube('EmployeeTeams', {
 
   joins: {
     Employees: {
-      targetCube: () => employeesCube,
+      targetCube: () => getCube('Employees'),
       relationship: 'belongsTo',
       preferredFor: ['Productivity'],
       on: [
@@ -1058,7 +1066,7 @@ employeeTeamsCube = defineCube('EmployeeTeams', {
       ]
     },
     Teams: {
-      targetCube: () => teamsCube,
+      targetCube: () => getCube('Teams'),
       relationship: 'belongsTo',
       preferredFor: ['Productivity'],
       on: [
@@ -1142,22 +1150,9 @@ employeeTeamsCube = defineCube('EmployeeTeams', {
       drillMembers: ['Employees.name', 'Teams.name', 'EmployeeTeams.joinedAt']
     }
   }
-}) as Cube
-
-/**
- * Export cubes for use in other modules
- */
-export { employeesCube, departmentsCube, productivityCube, timeEntriesCube, prEventsCube, teamsCube, employeeTeamsCube }
+})
 
 /**
  * All cubes for registration
  */
-export const allCubes = [
-  employeesCube,
-  departmentsCube,
-  productivityCube,
-  timeEntriesCube,
-  prEventsCube,
-  teamsCube,
-  employeeTeamsCube
-]
+export const allCubes: Cube[] = Array.from(cubeRegistry.values())
