@@ -379,7 +379,7 @@ aiApp.post('/generate', async (c) => {
           .update(settings)
           .set({ 
             value: (currentCount + 1).toString(),
-            updatedAt: new Date()
+            updated_at: new Date()
           })
           .where(eq(settings.key, GEMINI_CALLS_KEY))
       } catch (dbError) {
@@ -531,7 +531,7 @@ aiApp.post('/explain/analyze', async (c) => {
           .update(settings)
           .set({
             value: (currentCount + 1).toString(),
-            updatedAt: new Date()
+            updated_at: new Date()
           })
           .where(eq(settings.key, GEMINI_CALLS_KEY))
       } catch (dbError) {

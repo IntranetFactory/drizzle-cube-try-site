@@ -6,7 +6,7 @@
 import { Hono } from 'hono'
 import { eq, and, asc } from 'drizzle-orm'
 import type { DrizzleDatabase } from 'drizzle-cube/server'
-import { analyticsPages } from '../drizzle_schema'
+import { analytics_pages } from '../drizzle_schema'
 import { productivityDashboardConfig } from './dashboard-config'
 
 interface Variables {
@@ -36,14 +36,14 @@ analyticsApp.get('/', async (c) => {
   try {
     const pages = await db
       .select()
-      .from(analyticsPages)
+      .from(analytics_pages)
       .where(
         and(
-          eq(analyticsPages.organisationId, organisationId),
-          eq(analyticsPages.isActive, true)
+          eq(analytics_pages.organisation_id, organisationId),
+          eq(analytics_pages.is_active, true)
         )
       )
-      .orderBy(asc(analyticsPages.order), asc(analyticsPages.name))
+      .orderBy(asc(analytics_pages.order), asc(analytics_pages.name))
 
     return c.json({
       data: pages,
@@ -68,12 +68,12 @@ analyticsApp.get('/:id', async (c) => {
   try {
     const page = await db
       .select()
-      .from(analyticsPages)
+      .from(analytics_pages)
       .where(
         and(
-          eq(analyticsPages.id, id),
-          eq(analyticsPages.organisationId, organisationId),
-          eq(analyticsPages.isActive, true)
+          eq(analytics_pages.id, id),
+          eq(analytics_pages.organisation_id, organisationId),
+          eq(analytics_pages.is_active, true)
         )
       )
       .limit(1)
@@ -97,12 +97,12 @@ analyticsApp.post('/', async (c) => {
   try {
     // Check dashboard count limit
     const existingPages = await db
-      .select({ id: analyticsPages.id })
-      .from(analyticsPages)
+      .select({ id: analytics_pages.id })
+      .from(analytics_pages)
       .where(
         and(
-          eq(analyticsPages.organisationId, organisationId),
-          eq(analyticsPages.isActive, true)
+          eq(analytics_pages.organisation_id, organisationId),
+          eq(analytics_pages.is_active, true)
         )
       )
 
@@ -131,12 +131,12 @@ analyticsApp.post('/', async (c) => {
     }
 
     const newPage = await db
-      .insert(analyticsPages)
+      .insert(analytics_pages)
       .values({
         name,
         description,
         order,
-        organisationId,
+        organisation_id: organisationId,
         config
       })
       .returning()
@@ -156,12 +156,12 @@ analyticsApp.post('/create-example', async (c) => {
   try {
     // Check dashboard count limit
     const existingPages = await db
-      .select({ id: analyticsPages.id })
-      .from(analyticsPages)
+      .select({ id: analytics_pages.id })
+      .from(analytics_pages)
       .where(
         and(
-          eq(analyticsPages.organisationId, organisationId),
-          eq(analyticsPages.isActive, true)
+          eq(analytics_pages.organisation_id, organisationId),
+          eq(analytics_pages.is_active, true)
         )
       )
 
@@ -171,10 +171,10 @@ analyticsApp.post('/create-example', async (c) => {
       }, 400)
     }
     const newPage = await db
-      .insert(analyticsPages)
+      .insert(analytics_pages)
       .values({
         ...productivityDashboardConfig,
-        organisationId
+        organisation_id: organisationId
       })
       .returning()
 
@@ -207,7 +207,7 @@ analyticsApp.put('/:id', async (c) => {
     }
 
     const updateData: any = {
-      updatedAt: new Date()
+      updated_at: new Date()
     }
 
     if (name !== undefined) updateData.name = name
@@ -225,12 +225,12 @@ analyticsApp.put('/:id', async (c) => {
     }
 
     const updatedPage = await db
-      .update(analyticsPages)
+      .update(analytics_pages)
       .set(updateData)
       .where(
         and(
-          eq(analyticsPages.id, id),
-          eq(analyticsPages.organisationId, organisationId)
+          eq(analytics_pages.id, id),
+          eq(analytics_pages.organisation_id, organisationId)
         )
       )
       .returning()
@@ -258,16 +258,16 @@ analyticsApp.post('/:id/reset', async (c) => {
 
   try {
     const resetPage = await db
-      .update(analyticsPages)
+      .update(analytics_pages)
       .set({
         ...productivityDashboardConfig,
-        organisationId,
-        updatedAt: new Date()
+        organisation_id: organisationId,
+        updated_at: new Date()
       })
       .where(
         and(
-          eq(analyticsPages.id, id),
-          eq(analyticsPages.organisationId, organisationId)
+          eq(analytics_pages.id, id),
+          eq(analytics_pages.organisation_id, organisationId)
         )
       )
       .returning()
@@ -310,12 +310,12 @@ analyticsApp.post('/:id/thumbnail', async (c) => {
     // Get current page to verify it exists
     const existingPage = await db
       .select()
-      .from(analyticsPages)
+      .from(analytics_pages)
       .where(
         and(
-          eq(analyticsPages.id, id),
-          eq(analyticsPages.organisationId, organisationId),
-          eq(analyticsPages.isActive, true)
+          eq(analytics_pages.id, id),
+          eq(analytics_pages.organisation_id, organisationId),
+          eq(analytics_pages.is_active, true)
         )
       )
       .limit(1)
@@ -366,15 +366,15 @@ analyticsApp.post('/:id/thumbnail', async (c) => {
     }
 
     await db
-      .update(analyticsPages)
+      .update(analytics_pages)
       .set({
         config: updatedConfig,
-        updatedAt: new Date()
+        updated_at: new Date()
       })
       .where(
         and(
-          eq(analyticsPages.id, id),
-          eq(analyticsPages.organisationId, organisationId)
+          eq(analytics_pages.id, id),
+          eq(analytics_pages.organisation_id, organisationId)
         )
       )
 
@@ -400,15 +400,15 @@ analyticsApp.delete('/:id', async (c) => {
 
   try {
     const deletedPage = await db
-      .update(analyticsPages)
+      .update(analytics_pages)
       .set({
-        isActive: false,
-        updatedAt: new Date()
+        is_active: false,
+        updated_at: new Date()
       })
       .where(
         and(
-          eq(analyticsPages.id, id),
-          eq(analyticsPages.organisationId, organisationId)
+          eq(analytics_pages.id, id),
+          eq(analytics_pages.organisation_id, organisationId)
         )
       )
       .returning()
@@ -449,12 +449,12 @@ analyticsApp.post('/:id/export-pdf', async (c) => {
     // Verify page exists
     const page = await db
       .select()
-      .from(analyticsPages)
+      .from(analytics_pages)
       .where(
         and(
-          eq(analyticsPages.id, id),
-          eq(analyticsPages.organisationId, organisationId),
-          eq(analyticsPages.isActive, true)
+          eq(analytics_pages.id, id),
+          eq(analytics_pages.organisation_id, organisationId),
+          eq(analytics_pages.is_active, true)
         )
       )
       .limit(1)

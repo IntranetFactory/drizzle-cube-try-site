@@ -5,17 +5,17 @@
  * Enhanced with 100 employees, 16 teams, and global office distribution
  */
 
-import { employees, departments, productivity, timeEntries, prEvents, teams, employeeTeams, analyticsPages, notebooks, settings } from '../drizzle_schema'
+import { employees, departments, productivity, time_entries, pr_events, teams, employee_teams, analytics_pages, notebooks, settings } from '../drizzle_schema'
 import { eq, ne } from 'drizzle-orm'
 import { productivityDashboardConfig } from './dashboard-config'
 import sampleNotebookData from './notebook-seed-config.json'
 
 // Sample data
 const sampleDepartments = [
-  { name: 'Engineering', organisationId: 1, budget: 500000 },
-  { name: 'Marketing', organisationId: 1, budget: 250000 },
-  { name: 'Sales', organisationId: 1, budget: 300000 },
-  { name: 'HR', organisationId: 1, budget: 150000 }
+  { name: 'Engineering', organisation_id: 1, budget: 500000 },
+  { name: 'Marketing', organisation_id: 1, budget: 250000 },
+  { name: 'Sales', organisation_id: 1, budget: 300000 },
+  { name: 'HR', organisation_id: 1, budget: 150000 }
 ]
 
 // Office locations with geo coordinates
@@ -46,57 +46,57 @@ const officeLocations = [
 // Team definitions
 const sampleTeams = [
   // Engineering Teams (7)
-  { name: 'Platform', description: 'Core platform and infrastructure', departmentId: 1, organisationId: 1 },
-  { name: 'Frontend', description: 'Web and mobile UI development', departmentId: 1, organisationId: 1 },
-  { name: 'Backend', description: 'API and server-side development', departmentId: 1, organisationId: 1 },
-  { name: 'DevOps', description: 'Infrastructure and deployment', departmentId: 1, organisationId: 1 },
-  { name: 'Data Engineering', description: 'Data pipelines and analytics', departmentId: 1, organisationId: 1 },
-  { name: 'Security', description: 'Application security', departmentId: 1, organisationId: 1 },
-  { name: 'QA', description: 'Quality assurance', departmentId: 1, organisationId: 1 },
+  { name: 'Platform', description: 'Core platform and infrastructure', department_id: 1, organisation_id: 1 },
+  { name: 'Frontend', description: 'Web and mobile UI development', department_id: 1, organisation_id: 1 },
+  { name: 'Backend', description: 'API and server-side development', department_id: 1, organisation_id: 1 },
+  { name: 'DevOps', description: 'Infrastructure and deployment', department_id: 1, organisation_id: 1 },
+  { name: 'Data Engineering', description: 'Data pipelines and analytics', department_id: 1, organisation_id: 1 },
+  { name: 'Security', description: 'Application security', department_id: 1, organisation_id: 1 },
+  { name: 'QA', description: 'Quality assurance', department_id: 1, organisation_id: 1 },
   // Marketing Teams (3)
-  { name: 'Content', description: 'Content creation', departmentId: 2, organisationId: 1 },
-  { name: 'Growth', description: 'User acquisition', departmentId: 2, organisationId: 1 },
-  { name: 'Brand', description: 'Brand strategy', departmentId: 2, organisationId: 1 },
+  { name: 'Content', description: 'Content creation', department_id: 2, organisation_id: 1 },
+  { name: 'Growth', description: 'User acquisition', department_id: 2, organisation_id: 1 },
+  { name: 'Brand', description: 'Brand strategy', department_id: 2, organisation_id: 1 },
   // Sales Teams (3)
-  { name: 'Enterprise', description: 'Enterprise sales', departmentId: 3, organisationId: 1 },
-  { name: 'SMB', description: 'SMB sales', departmentId: 3, organisationId: 1 },
-  { name: 'Customer Success', description: 'Post-sale success', departmentId: 3, organisationId: 1 },
+  { name: 'Enterprise', description: 'Enterprise sales', department_id: 3, organisation_id: 1 },
+  { name: 'SMB', description: 'SMB sales', department_id: 3, organisation_id: 1 },
+  { name: 'Customer Success', description: 'Post-sale success', department_id: 3, organisation_id: 1 },
   // HR Teams (2)
-  { name: 'Recruiting', description: 'Talent acquisition', departmentId: 4, organisationId: 1 },
-  { name: 'People Ops', description: 'HR operations', departmentId: 4, organisationId: 1 },
+  { name: 'Recruiting', description: 'Talent acquisition', department_id: 4, organisation_id: 1 },
+  { name: 'People Ops', description: 'HR operations', department_id: 4, organisation_id: 1 },
   // Cross-functional (2)
-  { name: 'Innovation Lab', description: 'R&D projects', departmentId: null, organisationId: 1 },
-  { name: 'Accessibility', description: 'Cross-team a11y', departmentId: null, organisationId: 1 }
+  { name: 'Innovation Lab', description: 'R&D projects', department_id: null, organisation_id: 1 },
+  { name: 'Accessibility', description: 'Cross-team a11y', department_id: null, organisation_id: 1 }
 ]
 
 // Role definitions with salary ranges and location weights
 const roleDefinitions = {
   // Engineering roles
-  'Senior Engineer': { salaryMin: 130000, salaryMax: 180000, departmentId: 1, teams: ['Platform', 'Backend', 'Frontend', 'Data Engineering'] },
-  'Engineer': { salaryMin: 90000, salaryMax: 130000, departmentId: 1, teams: ['Platform', 'Backend', 'Frontend', 'Data Engineering'] },
-  'Junior Engineer': { salaryMin: 70000, salaryMax: 95000, departmentId: 1, teams: ['Backend', 'Frontend'] },
-  'DevOps Engineer': { salaryMin: 100000, salaryMax: 150000, departmentId: 1, teams: ['DevOps', 'Platform'] },
-  'QA Engineer': { salaryMin: 80000, salaryMax: 110000, departmentId: 1, teams: ['QA'] },
-  'Engineering Manager': { salaryMin: 160000, salaryMax: 200000, departmentId: 1, teams: ['Platform', 'Backend', 'Frontend'] },
-  'Security Engineer': { salaryMin: 120000, salaryMax: 160000, departmentId: 1, teams: ['Security'] },
+  'Senior Engineer': { salaryMin: 130000, salaryMax: 180000, department_id: 1, teams: ['Platform', 'Backend', 'Frontend', 'Data Engineering'] },
+  'Engineer': { salaryMin: 90000, salaryMax: 130000, department_id: 1, teams: ['Platform', 'Backend', 'Frontend', 'Data Engineering'] },
+  'Junior Engineer': { salaryMin: 70000, salaryMax: 95000, department_id: 1, teams: ['Backend', 'Frontend'] },
+  'DevOps Engineer': { salaryMin: 100000, salaryMax: 150000, department_id: 1, teams: ['DevOps', 'Platform'] },
+  'QA Engineer': { salaryMin: 80000, salaryMax: 110000, department_id: 1, teams: ['QA'] },
+  'Engineering Manager': { salaryMin: 160000, salaryMax: 200000, department_id: 1, teams: ['Platform', 'Backend', 'Frontend'] },
+  'Security Engineer': { salaryMin: 120000, salaryMax: 160000, department_id: 1, teams: ['Security'] },
   // Marketing roles
-  'Marketing Manager': { salaryMin: 110000, salaryMax: 140000, departmentId: 2, teams: ['Content', 'Growth', 'Brand'] },
-  'Content Specialist': { salaryMin: 65000, salaryMax: 90000, departmentId: 2, teams: ['Content'] },
-  'Growth Marketer': { salaryMin: 75000, salaryMax: 100000, departmentId: 2, teams: ['Growth'] },
-  'Brand Designer': { salaryMin: 70000, salaryMax: 95000, departmentId: 2, teams: ['Brand'] },
-  'Marketing Analyst': { salaryMin: 80000, salaryMax: 105000, departmentId: 2, teams: ['Growth'] },
+  'Marketing Manager': { salaryMin: 110000, salaryMax: 140000, department_id: 2, teams: ['Content', 'Growth', 'Brand'] },
+  'Content Specialist': { salaryMin: 65000, salaryMax: 90000, department_id: 2, teams: ['Content'] },
+  'Growth Marketer': { salaryMin: 75000, salaryMax: 100000, department_id: 2, teams: ['Growth'] },
+  'Brand Designer': { salaryMin: 70000, salaryMax: 95000, department_id: 2, teams: ['Brand'] },
+  'Marketing Analyst': { salaryMin: 80000, salaryMax: 105000, department_id: 2, teams: ['Growth'] },
   // Sales roles
-  'Sales Director': { salaryMin: 140000, salaryMax: 180000, departmentId: 3, teams: ['Enterprise', 'SMB'] },
-  'Enterprise AE': { salaryMin: 100000, salaryMax: 150000, departmentId: 3, teams: ['Enterprise'] },
-  'SMB AE': { salaryMin: 75000, salaryMax: 110000, departmentId: 3, teams: ['SMB'] },
-  'SDR': { salaryMin: 55000, salaryMax: 75000, departmentId: 3, teams: ['Enterprise', 'SMB'] },
-  'Customer Success': { salaryMin: 70000, salaryMax: 95000, departmentId: 3, teams: ['Customer Success'] },
+  'Sales Director': { salaryMin: 140000, salaryMax: 180000, department_id: 3, teams: ['Enterprise', 'SMB'] },
+  'Enterprise AE': { salaryMin: 100000, salaryMax: 150000, department_id: 3, teams: ['Enterprise'] },
+  'SMB AE': { salaryMin: 75000, salaryMax: 110000, department_id: 3, teams: ['SMB'] },
+  'SDR': { salaryMin: 55000, salaryMax: 75000, department_id: 3, teams: ['Enterprise', 'SMB'] },
+  'Customer Success': { salaryMin: 70000, salaryMax: 95000, department_id: 3, teams: ['Customer Success'] },
   // HR roles
-  'HR Director': { salaryMin: 130000, salaryMax: 160000, departmentId: 4, teams: ['People Ops'] },
-  'HR Business Partner': { salaryMin: 90000, salaryMax: 120000, departmentId: 4, teams: ['People Ops'] },
-  'Recruiter': { salaryMin: 65000, salaryMax: 90000, departmentId: 4, teams: ['Recruiting'] },
-  'HR Coordinator': { salaryMin: 50000, salaryMax: 65000, departmentId: 4, teams: ['People Ops'] },
-  'Learning & Development': { salaryMin: 75000, salaryMax: 100000, departmentId: 4, teams: ['People Ops'] }
+  'HR Director': { salaryMin: 130000, salaryMax: 160000, department_id: 4, teams: ['People Ops'] },
+  'HR Business Partner': { salaryMin: 90000, salaryMax: 120000, department_id: 4, teams: ['People Ops'] },
+  'Recruiter': { salaryMin: 65000, salaryMax: 90000, department_id: 4, teams: ['Recruiting'] },
+  'HR Coordinator': { salaryMin: 50000, salaryMax: 65000, department_id: 4, teams: ['People Ops'] },
+  'Learning & Development': { salaryMin: 75000, salaryMax: 100000, department_id: 4, teams: ['People Ops'] }
 }
 
 // First and last name pools for generating employees
@@ -169,8 +169,8 @@ function randomSalary(min: number, max: number): number {
 }
 
 // Helper to select weighted random location
-function selectLocation(departmentId: number): typeof officeLocations[0] {
-  const weights = locationWeightsByDept[departmentId] || locationWeightsByDept[1]
+function selectLocation(department_id: number): typeof officeLocations[0] {
+  const weights = locationWeightsByDept[department_id] || locationWeightsByDept[1]
   const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0)
   let random = Math.random() * totalWeight
 
@@ -222,15 +222,15 @@ function generateEmployees(): Array<{
   name: string
   email: string
   active: boolean
-  departmentId: number
-  organisationId: number
+  department_id: number
+  organisation_id: number
   salary: number
   city: string
   region: string
   country: string
   latitude: number
   longitude: number
-  createdAt: Date
+  created_at: Date
   role: string
 }> {
   // Clear used names for fresh generation
@@ -240,15 +240,15 @@ function generateEmployees(): Array<{
     name: string
     email: string
     active: boolean
-    departmentId: number
-    organisationId: number
+    department_id: number
+    organisation_id: number
     salary: number
     city: string
     region: string
     country: string
     latitude: number
     longitude: number
-    createdAt: Date
+    created_at: Date
     role: string
   }> = []
 
@@ -257,7 +257,7 @@ function generateEmployees(): Array<{
 
     for (let i = 0; i < count; i++) {
       const name = generateUniqueName()
-      const location = selectLocation(roleDef.departmentId)
+      const location = selectLocation(roleDef.department_id)
       const salary = randomSalary(roleDef.salaryMin, roleDef.salaryMax)
       const hireDate = generateHireDate(role)
       const isActive = Math.random() > 0.05 // 95% active
@@ -266,15 +266,15 @@ function generateEmployees(): Array<{
         name,
         email: name.toLowerCase().replace(' ', '.') + '@company.com',
         active: isActive,
-        departmentId: roleDef.departmentId,
-        organisationId: 1,
+        department_id: roleDef.department_id,
+        organisation_id: 1,
         salary,
         city: location.city,
         region: location.region,
         country: location.country,
         latitude: location.latitude,
         longitude: location.longitude,
-        createdAt: hireDate,
+        created_at: hireDate,
         role
       })
     }
@@ -285,22 +285,22 @@ function generateEmployees(): Array<{
 
 // Generate team assignments for employees
 function generateTeamAssignments(
-  insertedEmployees: Array<{ id: number; createdAt: Date | null }>,
+  insertedEmployees: Array<{ id: number; created_at: Date | null }>,
   insertedTeams: Array<{ id: number; name: string }>,
   employeeRoles: string[]
 ): Array<{
-  employeeId: number
-  teamId: number
+  employee_id: number
+  team_id: number
   role: string
-  joinedAt: Date
-  organisationId: number
+  joined_at: Date
+  organisation_id: number
 }> {
   const assignments: Array<{
-    employeeId: number
-    teamId: number
+    employee_id: number
+    team_id: number
     role: string
-    joinedAt: Date
-    organisationId: number
+    joined_at: Date
+    organisation_id: number
   }> = []
 
   insertedEmployees.forEach((employee, index) => {
@@ -316,11 +316,11 @@ function generateTeamAssignments(
     if (primaryTeam) {
       const isLead = employeeRole.includes('Manager') || employeeRole.includes('Director') || employeeRole.includes('Senior')
       assignments.push({
-        employeeId: employee.id,
-        teamId: primaryTeam.id,
+        employee_id: employee.id,
+        team_id: primaryTeam.id,
         role: isLead ? 'lead' : 'member',
-        joinedAt: employee.createdAt || new Date(),
-        organisationId: 1
+        joined_at: employee.created_at || new Date(),
+        organisation_id: 1
       })
     }
 
@@ -331,15 +331,15 @@ function generateTeamAssignments(
       const secondaryTeam = insertedTeams.find(t => t.name === secondaryTeamName)
 
       if (secondaryTeam) {
-        const joinDate = new Date(employee.createdAt || new Date())
+        const joinDate = new Date(employee.created_at || new Date())
         joinDate.setDate(joinDate.getDate() + Math.floor(Math.random() * 180) + 30) // 1-6 months after hire
 
         assignments.push({
-          employeeId: employee.id,
-          teamId: secondaryTeam.id,
+          employee_id: employee.id,
+          team_id: secondaryTeam.id,
           role: 'contributor',
-          joinedAt: joinDate,
-          organisationId: 1
+          joined_at: joinDate,
+          organisation_id: 1
         })
       }
     }
@@ -350,15 +350,15 @@ function generateTeamAssignments(
       const crossFuncTeam = crossFuncTeams[Math.floor(Math.random() * crossFuncTeams.length)]
 
       if (crossFuncTeam) {
-        const joinDate = new Date(employee.createdAt || new Date())
+        const joinDate = new Date(employee.created_at || new Date())
         joinDate.setDate(joinDate.getDate() + Math.floor(Math.random() * 365) + 60) // 2-12 months after hire
 
         assignments.push({
-          employeeId: employee.id,
-          teamId: crossFuncTeam.id,
+          employee_id: employee.id,
+          team_id: crossFuncTeam.id,
           role: 'contributor',
-          joinedAt: joinDate,
-          organisationId: 1
+          joined_at: joinDate,
+          organisation_id: 1
         })
       }
     }
@@ -368,29 +368,29 @@ function generateTeamAssignments(
 }
 
 // Role-based productivity profiles (used for productivity data generation)
-const productivityProfiles: Record<string, { linesOfCodeBase: number; pullRequestsBase: number; deploymentsBase: number }> = {
-  'Senior Engineer': { linesOfCodeBase: 300, pullRequestsBase: 8, deploymentsBase: 2 },
-  'Engineer': { linesOfCodeBase: 250, pullRequestsBase: 6, deploymentsBase: 1 },
-  'Junior Engineer': { linesOfCodeBase: 180, pullRequestsBase: 4, deploymentsBase: 0 },
-  'DevOps Engineer': { linesOfCodeBase: 150, pullRequestsBase: 4, deploymentsBase: 5 },
-  'QA Engineer': { linesOfCodeBase: 100, pullRequestsBase: 12, deploymentsBase: 0 },
-  'Engineering Manager': { linesOfCodeBase: 50, pullRequestsBase: 2, deploymentsBase: 0 },
-  'Security Engineer': { linesOfCodeBase: 120, pullRequestsBase: 3, deploymentsBase: 1 },
-  'Marketing Manager': { linesOfCodeBase: 0, pullRequestsBase: 1, deploymentsBase: 0 },
-  'Content Specialist': { linesOfCodeBase: 0, pullRequestsBase: 0, deploymentsBase: 0 },
-  'Growth Marketer': { linesOfCodeBase: 0, pullRequestsBase: 0, deploymentsBase: 0 },
-  'Brand Designer': { linesOfCodeBase: 0, pullRequestsBase: 0, deploymentsBase: 0 },
-  'Marketing Analyst': { linesOfCodeBase: 0, pullRequestsBase: 0, deploymentsBase: 0 },
-  'Sales Director': { linesOfCodeBase: 0, pullRequestsBase: 0, deploymentsBase: 0 },
-  'Enterprise AE': { linesOfCodeBase: 0, pullRequestsBase: 0, deploymentsBase: 0 },
-  'SMB AE': { linesOfCodeBase: 0, pullRequestsBase: 0, deploymentsBase: 0 },
-  'SDR': { linesOfCodeBase: 0, pullRequestsBase: 0, deploymentsBase: 0 },
-  'Customer Success': { linesOfCodeBase: 0, pullRequestsBase: 0, deploymentsBase: 0 },
-  'HR Director': { linesOfCodeBase: 0, pullRequestsBase: 1, deploymentsBase: 0 },
-  'HR Business Partner': { linesOfCodeBase: 0, pullRequestsBase: 0, deploymentsBase: 0 },
-  'Recruiter': { linesOfCodeBase: 0, pullRequestsBase: 0, deploymentsBase: 0 },
-  'HR Coordinator': { linesOfCodeBase: 0, pullRequestsBase: 0, deploymentsBase: 0 },
-  'Learning & Development': { linesOfCodeBase: 0, pullRequestsBase: 0, deploymentsBase: 0 }
+const productivityProfiles: Record<string, { lines_of_codeBase: number; pull_requestsBase: number; deploymentsBase: number }> = {
+  'Senior Engineer': { lines_of_codeBase: 300, pull_requestsBase: 8, deploymentsBase: 2 },
+  'Engineer': { lines_of_codeBase: 250, pull_requestsBase: 6, deploymentsBase: 1 },
+  'Junior Engineer': { lines_of_codeBase: 180, pull_requestsBase: 4, deploymentsBase: 0 },
+  'DevOps Engineer': { lines_of_codeBase: 150, pull_requestsBase: 4, deploymentsBase: 5 },
+  'QA Engineer': { lines_of_codeBase: 100, pull_requestsBase: 12, deploymentsBase: 0 },
+  'Engineering Manager': { lines_of_codeBase: 50, pull_requestsBase: 2, deploymentsBase: 0 },
+  'Security Engineer': { lines_of_codeBase: 120, pull_requestsBase: 3, deploymentsBase: 1 },
+  'Marketing Manager': { lines_of_codeBase: 0, pull_requestsBase: 1, deploymentsBase: 0 },
+  'Content Specialist': { lines_of_codeBase: 0, pull_requestsBase: 0, deploymentsBase: 0 },
+  'Growth Marketer': { lines_of_codeBase: 0, pull_requestsBase: 0, deploymentsBase: 0 },
+  'Brand Designer': { lines_of_codeBase: 0, pull_requestsBase: 0, deploymentsBase: 0 },
+  'Marketing Analyst': { lines_of_codeBase: 0, pull_requestsBase: 0, deploymentsBase: 0 },
+  'Sales Director': { lines_of_codeBase: 0, pull_requestsBase: 0, deploymentsBase: 0 },
+  'Enterprise AE': { lines_of_codeBase: 0, pull_requestsBase: 0, deploymentsBase: 0 },
+  'SMB AE': { lines_of_codeBase: 0, pull_requestsBase: 0, deploymentsBase: 0 },
+  'SDR': { lines_of_codeBase: 0, pull_requestsBase: 0, deploymentsBase: 0 },
+  'Customer Success': { lines_of_codeBase: 0, pull_requestsBase: 0, deploymentsBase: 0 },
+  'HR Director': { lines_of_codeBase: 0, pull_requestsBase: 1, deploymentsBase: 0 },
+  'HR Business Partner': { lines_of_codeBase: 0, pull_requestsBase: 0, deploymentsBase: 0 },
+  'Recruiter': { lines_of_codeBase: 0, pull_requestsBase: 0, deploymentsBase: 0 },
+  'HR Coordinator': { lines_of_codeBase: 0, pull_requestsBase: 0, deploymentsBase: 0 },
+  'Learning & Development': { lines_of_codeBase: 0, pull_requestsBase: 0, deploymentsBase: 0 }
 }
 
 // PR Event types for funnel analysis
@@ -433,7 +433,7 @@ const prActivityProfiles: Record<string, { prActivityBase: number; canReview: bo
 }
 
 // Generate comprehensive productivity data from 2024 to current date
-function generateProductivityData(insertedEmployees: Array<{ id: number; active: boolean; departmentId: number | null }>, employeeRoles: string[]): any[] {
+function generateProductivityData(insertedEmployees: Array<{ id: number; active: boolean; department_id: number | null }>, employeeRoles: string[]): any[] {
   const productivityData: any[] = []
   const startDate = new Date('2024-01-01')
   const endDate = new Date() // Current date
@@ -468,20 +468,20 @@ function generateProductivityData(insertedEmployees: Array<{ id: number; active:
       const weekendWork = (role.includes('Senior') || role.includes('DevOps')) &&
                          Math.random() < 0.15 && isWeekend
 
-      let daysOff = false
-      let linesOfCode = 0
-      let pullRequests = 0
-      let liveDeployments = 0
-      let happinessIndex = 7 // Base happiness
+      let days_off = false
+      let lines_of_code = 0
+      let pull_requests = 0
+      let live_deployments = 0
+      let happiness_index = 7 // Base happiness
 
       if (!employee.active) {
         // Inactive employees have no productivity
-        daysOff = true
-        happinessIndex = 5
+        days_off = true
+        happiness_index = 5
       } else if (!isWorkDay && !weekendWork) {
         // Regular days off
-        daysOff = true
-        happinessIndex = 8 // Higher happiness on days off
+        days_off = true
+        happiness_index = 8 // Higher happiness on days off
       } else {
         // Working day - generate realistic productivity
         const overallModifier = seasonalModifier * dayModifier * (0.7 + Math.random() * 0.6) // Random variation
@@ -489,30 +489,30 @@ function generateProductivityData(insertedEmployees: Array<{ id: number; active:
         // Vacation days (random 15-25 days per year)
         const vacationProbability = 0.04 + Math.random() * 0.03 // 4-7% chance per day
         if (Math.random() < vacationProbability / 365 * 20) { // Spread 20 vacation days
-          daysOff = true
-          happinessIndex = 9 // Very happy on vacation
+          days_off = true
+          happiness_index = 9 // Very happy on vacation
         } else {
           // Regular work day
-          linesOfCode = Math.max(0, Math.round(profile.linesOfCodeBase * overallModifier * (0.5 + Math.random())))
-          pullRequests = Math.max(0, Math.round(profile.pullRequestsBase * overallModifier * (0.3 + Math.random() * 0.8)))
-          liveDeployments = Math.max(0, Math.round(profile.deploymentsBase * overallModifier * (0.2 + Math.random() * 0.9)))
+          lines_of_code = Math.max(0, Math.round(profile.lines_of_codeBase * overallModifier * (0.5 + Math.random())))
+          pull_requests = Math.max(0, Math.round(profile.pull_requestsBase * overallModifier * (0.3 + Math.random() * 0.8)))
+          live_deployments = Math.max(0, Math.round(profile.deploymentsBase * overallModifier * (0.2 + Math.random() * 0.9)))
 
           // Happiness correlates with productivity but has randomness
-          const productivityScore = (linesOfCode + pullRequests * 50 + liveDeployments * 100) / 400
-          happinessIndex = Math.max(1, Math.min(10, Math.round(6 + productivityScore * 2 + (Math.random() - 0.5) * 3)))
+          const productivityScore = (lines_of_code + pull_requests * 50 + live_deployments * 100) / 400
+          happiness_index = Math.max(1, Math.min(10, Math.round(6 + productivityScore * 2 + (Math.random() - 0.5) * 3)))
         }
       }
 
       productivityData.push({
-        employeeId: employee.id,
-        departmentId: employee.departmentId,
+        employee_id: employee.id,
+        department_id: employee.department_id,
         date: new Date(date),
-        linesOfCode,
-        pullRequests,
-        liveDeployments,
-        daysOff,
-        happinessIndex,
-        organisationId: 1
+        lines_of_code,
+        pull_requests,
+        live_deployments,
+        days_off,
+        happiness_index,
+        organisation_id: 1
       })
     })
   }
@@ -552,16 +552,16 @@ function randomInt(min: number, max: number): number {
 }
 
 interface PREventData {
-  prNumber: number
-  eventType: PREventType
-  employeeId: number
-  organisationId: number
+  pr_number: number
+  event_type: PREventType
+  employee_id: number
+  organisation_id: number
   timestamp: Date
 }
 
 // Generate PR event sequence for a single PR
 function generatePREventSequence(
-  prNumber: number,
+  pr_number: number,
   authorId: number,
   reviewers: { id: number }[],
   createdDate: Date
@@ -571,10 +571,10 @@ function generatePREventSequence(
 
   // 1. CREATED (100% - always happens)
   events.push({
-    prNumber,
-    eventType: 'created',
-    employeeId: authorId,
-    organisationId: 1,
+    pr_number,
+    event_type: 'created',
+    employee_id: authorId,
+    organisation_id: 1,
     timestamp: new Date(currentTime)
   })
 
@@ -583,10 +583,10 @@ function generatePREventSequence(
     currentTime = addMinutes(currentTime, randomInt(5, 60))
     const reviewer = reviewers[Math.floor(Math.random() * reviewers.length)]
     events.push({
-      prNumber,
-      eventType: 'review_requested',
-      employeeId: reviewer.id,
-      organisationId: 1,
+      pr_number,
+      event_type: 'review_requested',
+      employee_id: reviewer.id,
+      organisation_id: 1,
       timestamp: new Date(currentTime)
     })
 
@@ -599,50 +599,50 @@ function generatePREventSequence(
       if (outcomeRoll < 0.2) {
         // 20% - Just comments (reviewed)
         events.push({
-          prNumber,
-          eventType: 'reviewed',
-          employeeId: reviewer.id,
-          organisationId: 1,
+          pr_number,
+          event_type: 'reviewed',
+          employee_id: reviewer.id,
+          organisation_id: 1,
           timestamp: new Date(currentTime)
         })
         // May get approved later (70% chance)
         if (Math.random() < 0.7) {
           currentTime = addMinutes(currentTime, randomInt(60, 1440))
           events.push({
-            prNumber,
-            eventType: 'approved',
-            employeeId: reviewer.id,
-            organisationId: 1,
+            pr_number,
+            event_type: 'approved',
+            employee_id: reviewer.id,
+            organisation_id: 1,
             timestamp: new Date(currentTime)
           })
         }
       } else if (outcomeRoll < 0.4) {
         // 20% - Changes requested
         events.push({
-          prNumber,
-          eventType: 'changes_requested',
-          employeeId: reviewer.id,
-          organisationId: 1,
+          pr_number,
+          event_type: 'changes_requested',
+          employee_id: reviewer.id,
+          organisation_id: 1,
           timestamp: new Date(currentTime)
         })
         // 60% eventually get approved after changes
         if (Math.random() < 0.6) {
           currentTime = addMinutes(currentTime, randomInt(120, 2880)) // 2 hours to 2 days
           events.push({
-            prNumber,
-            eventType: 'approved',
-            employeeId: reviewer.id,
-            organisationId: 1,
+            pr_number,
+            event_type: 'approved',
+            employee_id: reviewer.id,
+            organisation_id: 1,
             timestamp: new Date(currentTime)
           })
         }
       } else {
         // 60% - Direct approval
         events.push({
-          prNumber,
-          eventType: 'approved',
-          employeeId: reviewer.id,
-          organisationId: 1,
+          pr_number,
+          event_type: 'approved',
+          employee_id: reviewer.id,
+          organisation_id: 1,
           timestamp: new Date(currentTime)
         })
       }
@@ -650,25 +650,25 @@ function generatePREventSequence(
   }
 
   // 4. MERGED or CLOSED (final state)
-  const hasApproval = events.some(e => e.eventType === 'approved')
+  const hasApproval = events.some(e => e.event_type === 'approved')
   if (hasApproval && Math.random() < 0.9) {
     // 90% of approved PRs get merged
     currentTime = addMinutes(currentTime, randomInt(10, 120))
     events.push({
-      prNumber,
-      eventType: 'merged',
-      employeeId: authorId,
-      organisationId: 1,
+      pr_number,
+      event_type: 'merged',
+      employee_id: authorId,
+      organisation_id: 1,
       timestamp: new Date(currentTime)
     })
   } else if (Math.random() < 0.3) {
     // 30% of unapproved PRs get closed
     currentTime = addMinutes(currentTime, randomInt(1440, 10080)) // 1-7 days
     events.push({
-      prNumber,
-      eventType: 'closed',
-      employeeId: authorId,
-      organisationId: 1,
+      pr_number,
+      event_type: 'closed',
+      employee_id: authorId,
+      organisation_id: 1,
       timestamp: new Date(currentTime)
     })
   }
@@ -721,7 +721,7 @@ function generatePREventsData(insertedEmployees: { id: number; active: boolean }
       )
 
       for (let i = 0; i < monthlyPRCount; i++) {
-        const prNumber = globalPRCounter++
+        const pr_number = globalPRCounter++
         const prCreatedDate = randomDateInRange(monthStart, effectiveMonthEnd)
 
         // Get reviewers excluding the author
@@ -729,7 +729,7 @@ function generatePREventsData(insertedEmployees: { id: number; active: boolean }
 
         // Generate event sequence for this PR
         const prEventSequence = generatePREventSequence(
-          prNumber,
+          pr_number,
           employee.id,
           availableReviewers,
           prCreatedDate
@@ -825,7 +825,7 @@ function generateTimeEntriesData(
   // Process each employee
   insertedEmployees.forEach((employee, employeeIndex) => {
     // Get employee's department
-    const employeeDepartment = departmentMap[employee.departmentId]
+    const employeeDepartment = departmentMap[employee.department_id]
     if (!employeeDepartment) return
 
     // Determine employee work pattern based on role
@@ -907,30 +907,30 @@ function generateTimeEntriesData(
         }
 
         const billableRate = billableRates[selectedType as keyof typeof billableRates] || 0.5
-        const billableHours = Math.round(hours * billableRate * 4) / 4
+        const billable_hours = Math.round(hours * billableRate * 4) / 4
 
         // Select random description
         const typeDescriptions = descriptions[selectedType as keyof typeof descriptions] || ['General work']
         const description = typeDescriptions[Math.floor(Math.random() * typeDescriptions.length)]
 
         // Some cross-department collaboration (5% chance)
-        let workDepartmentId = employee.departmentId
+        let workDepartmentId = employee.department_id
         if (Math.random() < 0.05 && selectedType === 'meetings') {
-          const otherDepts = insertedDepartments.filter(d => d.id !== employee.departmentId)
+          const otherDepts = insertedDepartments.filter(d => d.id !== employee.department_id)
           if (otherDepts.length > 0) {
             workDepartmentId = otherDepts[Math.floor(Math.random() * otherDepts.length)].id
           }
         }
 
         timeEntriesData.push({
-          employeeId: employee.id,
-          departmentId: workDepartmentId,
+          employee_id: employee.id,
+          department_id: workDepartmentId,
           date: new Date(date),
-          allocationType: selectedType,
+          allocation_type: selectedType,
           hours,
           description,
-          billableHours,
-          organisationId: 1
+          billable_hours,
+          organisation_id: 1
         })
 
         totalDayHours += hours
@@ -945,7 +945,7 @@ function generateTimeEntriesData(
 // Use shared dashboard configuration
 const sampleAnalyticsPage = {
   ...productivityDashboardConfig,
-  organisationId: 1
+  organisation_id: 1
 }
 
 export async function executeSeed(db: any) {
@@ -954,14 +954,14 @@ export async function executeSeed(db: any) {
   try {
     // Clear existing data (in reverse dependency order)
     console.log('🧹 Clearing existing data...')
-    await db.delete(employeeTeams)
+    await db.delete(employee_teams)
     await db.delete(teams)
-    await db.delete(prEvents)
-    await db.delete(timeEntries)
+    await db.delete(pr_events)
+    await db.delete(time_entries)
     await db.delete(productivity)
     await db.delete(employees)
     await db.delete(departments)
-    await db.delete(analyticsPages)
+    await db.delete(analytics_pages)
     await db.delete(settings)
 
     // Insert departments first (referenced by employees and teams)
@@ -976,7 +976,7 @@ export async function executeSeed(db: any) {
     console.log('👥 Inserting teams...')
     const teamData = sampleTeams.map(team => ({
       ...team,
-      departmentId: team.departmentId ? insertedDepartments[team.departmentId - 1]?.id : null
+      department_id: team.department_id ? insertedDepartments[team.department_id - 1]?.id : null
     }))
     const insertedTeams = await db.insert(teams)
       .values(teamData)
@@ -994,15 +994,15 @@ export async function executeSeed(db: any) {
       name: emp.name,
       email: emp.email,
       active: emp.active,
-      departmentId: insertedDepartments[emp.departmentId - 1]?.id || null,
-      organisationId: emp.organisationId,
+      department_id: insertedDepartments[emp.department_id - 1]?.id || null,
+      organisation_id: emp.organisation_id,
       salary: emp.salary,
       city: emp.city,
       region: emp.region,
       country: emp.country,
       latitude: emp.latitude,
       longitude: emp.longitude,
-      createdAt: emp.createdAt
+      created_at: emp.created_at
     }))
 
     // Insert employees
@@ -1023,7 +1023,7 @@ export async function executeSeed(db: any) {
 
     for (let i = 0; i < teamAssignments.length; i += teamAssignmentBatchSize) {
       const batch = teamAssignments.slice(i, i + teamAssignmentBatchSize)
-      await db.insert(employeeTeams).values(batch)
+      await db.insert(employee_teams).values(batch)
       insertedTeamAssignmentsCount += batch.length
     }
 
@@ -1058,7 +1058,7 @@ export async function executeSeed(db: any) {
 
     for (let i = 0; i < timeEntriesData.length; i += timeEntriesBatchSize) {
       const batch = timeEntriesData.slice(i, i + timeEntriesBatchSize)
-      await db.insert(timeEntries).values(batch)
+      await db.insert(time_entries).values(batch)
       insertedTimeEntriesCount += batch.length
       console.log(`⏰ Inserted time entries batch: ${insertedTimeEntriesCount}/${timeEntriesData.length}`)
     }
@@ -1076,7 +1076,7 @@ export async function executeSeed(db: any) {
 
     for (let i = 0; i < prEventsData.length; i += prEventsBatchSize) {
       const batch = prEventsData.slice(i, i + prEventsBatchSize)
-      await db.insert(prEvents).values(batch)
+      await db.insert(pr_events).values(batch)
       insertedPREventsCount += batch.length
       console.log(`🔀 Inserted PR events batch: ${insertedPREventsCount}/${prEventsData.length}`)
     }
@@ -1085,7 +1085,7 @@ export async function executeSeed(db: any) {
 
     // Insert sample analytics page
     console.log('📊 Inserting sample analytics page...')
-    const insertedPage = await db.insert(analyticsPages)
+    const insertedPage = await db.insert(analytics_pages)
       .values(sampleAnalyticsPage)
       .returning()
 
@@ -1103,8 +1103,8 @@ export async function executeSeed(db: any) {
         name: sampleNotebookData.name,
         description: sampleNotebookData.description,
         config: sampleNotebookData.config,
-        isActive: true,
-        updatedAt: new Date()
+        is_active: true,
+        updated_at: new Date()
       })
       .where(eq(notebooks.id, 1))
       .returning()
@@ -1121,7 +1121,7 @@ export async function executeSeed(db: any) {
       {
         key: 'gemini-ai-calls',
         value: '0',
-        organisationId: 1
+        organisation_id: 1
       }
     ]
 

@@ -34,8 +34,8 @@ notebooksApp.get('/', async (c) => {
       .from(notebooks)
       .where(
         and(
-          eq(notebooks.organisationId, organisationId),
-          eq(notebooks.isActive, true)
+          eq(notebooks.organisation_id, organisationId),
+          eq(notebooks.is_active, true)
         )
       )
       .orderBy(asc(notebooks.order), asc(notebooks.name))
@@ -67,8 +67,8 @@ notebooksApp.get('/:id', async (c) => {
       .where(
         and(
           eq(notebooks.id, id),
-          eq(notebooks.organisationId, organisationId),
-          eq(notebooks.isActive, true)
+          eq(notebooks.organisation_id, organisationId),
+          eq(notebooks.is_active, true)
         )
       )
       .limit(1)
@@ -96,8 +96,8 @@ notebooksApp.post('/', async (c) => {
       .from(notebooks)
       .where(
         and(
-          eq(notebooks.organisationId, organisationId),
-          eq(notebooks.isActive, true)
+          eq(notebooks.organisation_id, organisationId),
+          eq(notebooks.is_active, true)
         )
       )
 
@@ -120,7 +120,7 @@ notebooksApp.post('/', async (c) => {
         name,
         description,
         order,
-        organisationId,
+        organisation_id: organisationId,
         config: config || { blocks: [], messages: [] }
       })
       .returning()
@@ -156,13 +156,13 @@ notebooksApp.put('/:id', async (c) => {
     }
 
     const updateData: {
-      updatedAt: Date
+      updated_at: Date
       name?: string
       description?: string
       order?: number
       config?: unknown
     } = {
-      updatedAt: new Date()
+      updated_at: new Date()
     }
 
     if (name !== undefined) updateData.name = name
@@ -176,7 +176,7 @@ notebooksApp.put('/:id', async (c) => {
       .where(
         and(
           eq(notebooks.id, id),
-          eq(notebooks.organisationId, organisationId)
+          eq(notebooks.organisation_id, organisationId)
         )
       )
       .returning()
@@ -211,13 +211,13 @@ notebooksApp.delete('/:id', async (c) => {
     const deleted = await db
       .update(notebooks)
       .set({
-        isActive: false,
-        updatedAt: new Date()
+        is_active: false,
+        updated_at: new Date()
       })
       .where(
         and(
           eq(notebooks.id, id),
-          eq(notebooks.organisationId, organisationId)
+          eq(notebooks.organisation_id, organisationId)
         )
       )
       .returning()

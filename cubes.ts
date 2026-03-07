@@ -94,7 +94,7 @@ function getCube(name: string): Cube {
 registerEntityCube('Employees', {
   title: 'Employee Analytics',
   description: 'Employee data and metrics',
-  
+
   tableName: "employees",
 
   // Cube-level joins for cross-cube queries
@@ -103,28 +103,28 @@ registerEntityCube('Employees', {
       targetCube: 'Departments',
       relationship: 'belongsTo',
       on: [
-        { source: "employees.departmentId", target: "departments.id" }
+        { source: "employees.department_id", target: "departments.id" }
       ]
     },
     Productivity: {
       targetCube: 'Productivity',
       relationship: 'hasMany',
       on: [
-        { source: "employees.id", target: "productivity.employeeId" }
+        { source: "employees.id", target: "productivity.employee_id" }
       ]
     },
     TimeEntries: {
       targetCube: 'TimeEntries',
       relationship: 'hasMany',
       on: [
-        { source: "employees.id", target: "timeEntries.employeeId" }
+        { source: "employees.id", target: "time_entries.employee_id" }
       ]
     },
     PREvents: {
       targetCube: 'PREvents',
       relationship: 'hasMany',
       on: [
-        { source: "employees.id", target: "prEvents.employeeId" }
+        { source: "employees.id", target: "pr_events.employee_id" }
       ]
     },
     EmployeeTeams: {
@@ -132,7 +132,7 @@ registerEntityCube('Employees', {
       relationship: 'hasMany',
       preferredFor: ['Teams'],
       on: [
-        { source: "employees.id", target: "employeeTeams.employeeId" }
+        { source: "employees.id", target: "employee_teams.employee_id" }
       ]
     }
   },
@@ -169,7 +169,7 @@ registerEntityCube('Employees', {
       name: 'departmentId',
       title: 'Department ID',
       type: 'number',
-      column: "employees.departmentId"
+      column: "employees.department_id"
     },
     isActive: {
       name: 'isActive',
@@ -181,7 +181,7 @@ registerEntityCube('Employees', {
       name: 'createdAt',
       title: 'Hire Date',
       type: 'time',
-      column: "employees.createdAt"
+      column: "employees.created_at"
     },
     // Location dimensions
     city: {
@@ -274,7 +274,7 @@ registerEntityCube('Employees', {
 registerEntityCube('Departments', {
   title: 'Department Analytics',
   description: 'Department-level metrics and budget analysis',
-  
+
   tableName: "departments",
 
   // Cube-level joins for cross-cube queries
@@ -283,28 +283,28 @@ registerEntityCube('Departments', {
       targetCube: 'Employees',
       relationship: 'hasMany',
       on: [
-        { source: "departments.id", target: "employees.departmentId" }
+        { source: "departments.id", target: "employees.department_id" }
       ]
     },
     TimeEntries: {
       targetCube: 'TimeEntries',
       relationship: 'hasMany',
       on: [
-        { source: "departments.id", target: "timeEntries.departmentId" }
+        { source: "departments.id", target: "time_entries.department_id" }
       ]
     },
     Productivity: {
       targetCube: 'Productivity',
       relationship: 'hasMany',
       on: [
-        { source: "departments.id", target: "productivity.departmentId" }
+        { source: "departments.id", target: "productivity.department_id" }
       ]
     },
     Teams: {
       targetCube: 'Teams',
       relationship: 'hasMany',
       on: [
-        { source: "departments.id", target: "teams.departmentId" }
+        { source: "departments.id", target: "teams.department_id" }
       ]
     }
   },
@@ -356,7 +356,7 @@ registerEntityCube('Departments', {
 registerEntityCube('Productivity', {
   title: 'Productivity Analytics',
   description: 'Daily productivity metrics including code output and deployments',
-  
+
   tableName: "productivity",
 
   // Cube-level joins for multi-cube queries
@@ -366,7 +366,7 @@ registerEntityCube('Productivity', {
       relationship: 'belongsTo',
       preferredFor: ['Teams'],
       on: [
-        { source: "productivity.employeeId", target: "employees.id" }
+        { source: "productivity.employee_id", target: "employees.id" }
       ]
     },
     EmployeeTeams: {
@@ -374,14 +374,14 @@ registerEntityCube('Productivity', {
       relationship: 'hasMany',
       preferredFor: ['Teams'],
       on: [
-        { source: "productivity.employeeId", target: "employeeTeams.employeeId" }
+        { source: "productivity.employee_id", target: "employee_teams.employee_id" }
       ]
     },
     Departments: {
       targetCube: 'Departments',
       relationship: 'belongsTo',
       on: [
-        { source: "productivity.departmentId", target: "departments.id" }
+        { source: "productivity.department_id", target: "departments.id" }
       ]
     }
   },
@@ -412,28 +412,28 @@ registerEntityCube('Productivity', {
       name: 'createdAt',
       title: 'Created At',
       type: 'time',
-      column: "productivity.createdAt"
+      column: "productivity.created_at"
     },
     isDayOff: {
       name: 'isDayOff',
       title: 'Day Off',
       type: 'boolean',
-      column: "productivity.daysOff"
+      column: "productivity.days_off"
     },
     happinessIndex: {
       name: 'happinessIndex',
       title: 'Happiness Index',
       type: 'number',
-      column: "productivity.happinessIndex"
+      column: "productivity.happiness_index"
     },
     happinessLevel: {
       name: 'happinessLevel',
       title: 'Happiness Level',
       type: 'string',
       sql: sql`
-        CASE 
-          WHEN ${schema["productivity"].happinessIndex} >= 8 THEN 'High'
-          WHEN ${schema["productivity"].happinessIndex} >= 6 THEN 'Medium'
+        CASE
+          WHEN ${schema["productivity"].happiness_index} >= 8 THEN 'High'
+          WHEN ${schema["productivity"].happiness_index} >= 6 THEN 'Medium'
           ELSE 'Low'
         END
       `
@@ -442,26 +442,26 @@ registerEntityCube('Productivity', {
       name: 'departmentId',
       title: 'Department ID',
       type: 'number',
-      column: "productivity.departmentId"
+      column: "productivity.department_id"
     },
     employeeId: {
       name: 'employeeId',
       title: 'Employee ID',
       type: 'number',
-      column: "productivity.employeeId"
+      column: "productivity.employee_id"
     },
     linesOfCode: {
       name: 'linesOfCode',
       title: 'Lines of Code',
       type: 'number',
-      column: "productivity.linesOfCode",
+      column: "productivity.lines_of_code",
       description: 'Raw lines of code for this record'
     },
     pullRequests: {
       name: 'pullRequests',
       title: 'Pull Requests',
       type: 'number',
-      column: "productivity.pullRequests",
+      column: "productivity.pull_requests",
       description: 'Raw PR count for this record'
     }
   },
@@ -487,7 +487,7 @@ registerEntityCube('Productivity', {
       type: 'count',
       column: "productivity.id",
       filters: [
-        () => eq(schema["productivity"].daysOff, false)
+        () => eq(schema["productivity"].days_off, false)
       ],
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.isDayOff']
     },
@@ -497,7 +497,7 @@ registerEntityCube('Productivity', {
       type: 'count',
       column: "productivity.id",
       filters: [
-        () => eq(schema["productivity"].daysOff, true)
+        () => eq(schema["productivity"].days_off, true)
       ],
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.isDayOff']
     },
@@ -505,54 +505,54 @@ registerEntityCube('Productivity', {
       name: 'avgLinesOfCode',
       title: 'Average Lines of Code',
       type: 'avg',
-      column: "productivity.linesOfCode",
+      column: "productivity.lines_of_code",
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.linesOfCode', 'Departments.name']
     },
     totalLinesOfCode: {
       name: 'totalLinesOfCode',
       title: 'Total Lines of Code',
       type: 'sum',
-      column: "productivity.linesOfCode",
+      column: "productivity.lines_of_code",
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.linesOfCode', 'Departments.name']
     },
     totalPullRequests: {
       name: 'totalPullRequests',
       title: 'Total Pull Requests',
       type: 'sum',
-      column: "productivity.pullRequests",
+      column: "productivity.pull_requests",
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.pullRequests', 'Departments.name']
     },
     avgPullRequests: {
       name: 'avgPullRequests',
       title: 'Average Pull Requests',
       type: 'avg',
-      column: "productivity.pullRequests",
+      column: "productivity.pull_requests",
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.pullRequests', 'Departments.name']
     },
     totalDeployments: {
       name: 'totalDeployments',
       title: 'Total Deployments',
       type: 'sum',
-      column: "productivity.liveDeployments"
+      column: "productivity.live_deployments"
     },
     avgDeployments: {
       name: 'avgDeployments',
       title: 'Average Deployments',
       type: 'avg',
-      column: "productivity.liveDeployments"
+      column: "productivity.live_deployments"
     },
     avgHappinessIndex: {
       name: 'avgHappinessIndex',
       title: 'Average Happiness',
       type: 'avg',
-      column: "productivity.happinessIndex",
+      column: "productivity.happiness_index",
       drillMembers: ['Productivity.date', 'Employees.name', 'Productivity.happinessIndex', 'Productivity.happinessLevel']
     },
     productivityScore: {
       name: 'productivityScore',
       title: 'Productivity Score',
       type: 'avg',
-      sql: sql`(${schema["productivity"].linesOfCode} + ${schema["productivity"].pullRequests} * 50 + ${schema["productivity"].liveDeployments} * 100)`,
+      sql: sql`(${schema["productivity"].lines_of_code} + ${schema["productivity"].pull_requests} * 50 + ${schema["productivity"].live_deployments} * 100)`,
       description: 'Composite productivity score based on code output, reviews, and deployments'
     },
 
@@ -561,21 +561,21 @@ registerEntityCube('Productivity', {
       name: 'stddevLinesOfCode',
       title: 'Lines of Code Std Dev',
       type: 'stddev',
-      column: "productivity.linesOfCode",
+      column: "productivity.lines_of_code",
       description: 'Variation in daily code output'
     },
     medianLinesOfCode: {
       name: 'medianLinesOfCode',
       title: 'Median Lines of Code',
       type: 'median',
-      column: "productivity.linesOfCode",
+      column: "productivity.lines_of_code",
       description: 'Median daily code output'
     },
     p95LinesOfCode: {
       name: 'p95LinesOfCode',
       title: '95th Percentile Lines',
       type: 'p95',
-      column: "productivity.linesOfCode",
+      column: "productivity.lines_of_code",
       description: 'High performer code output threshold'
     },
     // Statistical measures - Happiness Distribution
@@ -583,14 +583,14 @@ registerEntityCube('Productivity', {
       name: 'stddevHappinessIndex',
       title: 'Happiness Std Dev',
       type: 'stddev',
-      column: "productivity.happinessIndex",
+      column: "productivity.happiness_index",
       description: 'Variation in team happiness'
     },
     medianHappinessIndex: {
       name: 'medianHappinessIndex',
       title: 'Median Happiness',
       type: 'median',
-      column: "productivity.happinessIndex",
+      column: "productivity.happiness_index",
       description: 'Median happiness score'
     },
     // Statistical measures - Pull Requests
@@ -598,14 +598,14 @@ registerEntityCube('Productivity', {
       name: 'medianPullRequests',
       title: 'Median Pull Requests',
       type: 'median',
-      column: "productivity.pullRequests",
+      column: "productivity.pull_requests",
       description: 'Median daily pull requests'
     },
     p95PullRequests: {
       name: 'p95PullRequests',
       title: '95th Percentile PRs',
       type: 'p95',
-      column: "productivity.pullRequests",
+      column: "productivity.pull_requests",
       description: 'High performer PR threshold'
     },
 
@@ -709,24 +709,24 @@ registerEntityCube('Productivity', {
  * Time Entries cube - time tracking analytics with allocation types
  */
 registerEntityCube('TimeEntries', {
-  title: 'Time Entries Analytics', 
+  title: 'Time Entries Analytics',
   description: 'Employee time tracking with allocation types, departments, and billable hours',
-  
-  tableName: "timeEntries",
+
+  tableName: "time_entries",
 
   joins: {
     Employees: {
       targetCube: 'Employees',
       relationship: 'belongsTo',
       on: [
-        { source: "timeEntries.employeeId", target: "employees.id" }
+        { source: "time_entries.employee_id", target: "employees.id" }
       ]
     },
     Departments: {
       targetCube: 'Departments',
       relationship: 'belongsTo',
       on: [
-        { source: "timeEntries.departmentId", target: "departments.id" }
+        { source: "time_entries.department_id", target: "departments.id" }
       ]
     }
   },
@@ -736,44 +736,44 @@ registerEntityCube('TimeEntries', {
       name: 'id',
       title: 'Time Entry ID',
       type: 'number',
-      column: "timeEntries.id",
+      column: "time_entries.id",
       primaryKey: true
     },
     employeeId: {
       name: 'employeeId',
       title: 'Employee ID',
       type: 'number',
-      column: "timeEntries.employeeId"
+      column: "time_entries.employee_id"
     },
     departmentId: {
-      name: 'departmentId', 
+      name: 'departmentId',
       title: 'Department ID',
       type: 'number',
-      column: "timeEntries.departmentId"
+      column: "time_entries.department_id"
     },
     allocationType: {
       name: 'allocationType',
       title: 'Allocation Type',
       type: 'string',
-      column: "timeEntries.allocationType"
+      column: "time_entries.allocation_type"
     },
     description: {
       name: 'description',
       title: 'Task Description',
       type: 'string',
-      column: "timeEntries.description"
+      column: "time_entries.description"
     },
     date: {
       name: 'date',
       title: 'Date',
       type: 'time',
-      column: "timeEntries.date"
+      column: "time_entries.date"
     },
     createdAt: {
       name: 'createdAt',
       title: 'Created At',
       type: 'time',
-      column: "timeEntries.createdAt"
+      column: "time_entries.created_at"
     }
   },
 
@@ -783,61 +783,61 @@ registerEntityCube('TimeEntries', {
       name: 'count',
       title: 'Total Time Entries',
       type: 'count',
-      column: "timeEntries.id",
+      column: "time_entries.id",
       description: 'Total number of time entries'
     },
-    
+
     // Hours-based measures
     totalHours: {
       name: 'totalHours',
       title: 'Total Hours',
       type: 'sum',
-      column: "timeEntries.hours",
+      column: "time_entries.hours",
       description: 'Sum of all logged hours'
     },
     avgHours: {
       name: 'avgHours',
       title: 'Average Hours per Entry',
       type: 'avg',
-      column: "timeEntries.hours",
+      column: "time_entries.hours",
       description: 'Average hours per time entry'
     },
     minHours: {
       name: 'minHours',
       title: 'Minimum Hours',
       type: 'min',
-      column: "timeEntries.hours"
+      column: "time_entries.hours"
     },
     maxHours: {
       name: 'maxHours',
       title: 'Maximum Hours',
       type: 'max',
-      column: "timeEntries.hours"
+      column: "time_entries.hours"
     },
-    
+
     // Billable hours measures
     totalBillableHours: {
       name: 'totalBillableHours',
       title: 'Total Billable Hours',
       type: 'sum',
-      column: "timeEntries.billableHours",
+      column: "time_entries.billable_hours",
       description: 'Sum of all billable hours'
     },
     avgBillableHours: {
       name: 'avgBillableHours',
       title: 'Average Billable Hours',
       type: 'avg',
-      column: "timeEntries.billableHours"
+      column: "time_entries.billable_hours"
     },
-    
+
     // Allocation-specific measures with filters
     developmentHours: {
       name: 'developmentHours',
       title: 'Development Hours',
       type: 'sum',
-      column: "timeEntries.hours",
+      column: "time_entries.hours",
       filters: [
-        () => eq(schema["timeEntries"].allocationType, 'development')
+        () => eq(schema["time_entries"].allocation_type, 'development')
       ],
       description: 'Total hours spent on development tasks'
     },
@@ -845,9 +845,9 @@ registerEntityCube('TimeEntries', {
       name: 'meetingHours',
       title: 'Meeting Hours',
       type: 'sum',
-      column: "timeEntries.hours",
+      column: "time_entries.hours",
       filters: [
-        () => eq(schema["timeEntries"].allocationType, 'meetings')
+        () => eq(schema["time_entries"].allocation_type, 'meetings')
       ],
       description: 'Total hours spent in meetings'
     },
@@ -855,46 +855,46 @@ registerEntityCube('TimeEntries', {
       name: 'maintenanceHours',
       title: 'Maintenance Hours',
       type: 'sum',
-      column: "timeEntries.hours",
+      column: "time_entries.hours",
       filters: [
-        () => eq(schema["timeEntries"].allocationType, 'maintenance')
+        () => eq(schema["time_entries"].allocation_type, 'maintenance')
       ]
     },
-    
+
     // Distinct count measures
     distinctEmployees: {
       name: 'distinctEmployees',
       title: 'Unique Employees',
       type: 'countDistinct',
-      column: "timeEntries.employeeId",
+      column: "time_entries.employee_id",
       description: 'Number of unique employees with time entries'
     },
     distinctDepartments: {
       name: 'distinctDepartments',
       title: 'Unique Departments',
-      type: 'countDistinct', 
-      column: "timeEntries.departmentId"
+      type: 'countDistinct',
+      column: "time_entries.department_id"
     },
     distinctAllocations: {
       name: 'distinctAllocations',
       title: 'Unique Allocation Types',
       type: 'countDistinct',
-      column: "timeEntries.allocationType"
+      column: "time_entries.allocation_type"
     },
-    
+
     // Complex calculated measures
     utilizationRate: {
       name: 'utilizationRate',
       title: 'Utilization Rate (%)',
       type: 'avg',
-      sql: sql`(${schema["timeEntries"].billableHours} / NULLIF(${schema["timeEntries"].hours}, 0) * 100)`,
+      sql: sql`(${schema["time_entries"].billable_hours} / NULLIF(${schema["time_entries"].hours}, 0) * 100)`,
       description: 'Percentage of billable vs total hours'
     },
     avgDailyHours: {
-      name: 'avgDailyHours',  
+      name: 'avgDailyHours',
       title: 'Average Daily Hours',
       type: 'avg',
-      column: "timeEntries.hours",
+      column: "time_entries.hours",
       description: 'Average hours logged per day'
     }
   }
@@ -907,14 +907,14 @@ registerEntityCube('PREvents', {
   title: 'PR Events',
   description: 'Pull request lifecycle events for funnel analysis',
 
-  tableName: "prEvents",
+  tableName: "pr_events",
 
   joins: {
     Employees: {
       targetCube: 'Employees',
       relationship: 'belongsTo',
       on: [
-        { source: "prEvents.employeeId", target: "employees.id" }
+        { source: "pr_events.employee_id", target: "employees.id" }
       ]
     }
   },
@@ -924,38 +924,38 @@ registerEntityCube('PREvents', {
       name: 'id',
       title: 'Event ID',
       type: 'number',
-      column: "prEvents.id",
+      column: "pr_events.id",
       primaryKey: true
     },
     prNumber: {
       name: 'prNumber',
       title: 'PR Number',
       type: 'number',
-      column: "prEvents.prNumber"
+      column: "pr_events.pr_number"
     },
     eventType: {
       name: 'eventType',
       title: 'Event Type',
       type: 'string',
-      column: "prEvents.eventType"
+      column: "pr_events.event_type"
     },
     employeeId: {
       name: 'employeeId',
       title: 'Employee ID',
       type: 'number',
-      column: "prEvents.employeeId"
+      column: "pr_events.employee_id"
     },
     timestamp: {
       name: 'timestamp',
       title: 'Event Timestamp',
       type: 'time',
-      column: "prEvents.timestamp"
+      column: "pr_events.timestamp"
     },
     createdAt: {
       name: 'createdAt',
       title: 'Created At',
       type: 'time',
-      column: "prEvents.createdAt"
+      column: "pr_events.created_at"
     }
   },
 
@@ -964,21 +964,21 @@ registerEntityCube('PREvents', {
       name: 'count',
       title: 'Event Count',
       type: 'count',
-      column: "prEvents.id",
+      column: "pr_events.id",
       drillMembers: ['PREvents.prNumber', 'PREvents.eventType', 'PREvents.timestamp', 'Employees.name']
     },
     uniquePRs: {
       name: 'uniquePRs',
       title: 'Unique PRs',
       type: 'countDistinct',
-      column: "prEvents.prNumber",
+      column: "pr_events.pr_number",
       drillMembers: ['PREvents.prNumber', 'PREvents.eventType', 'PREvents.timestamp']
     },
     uniqueActors: {
       name: 'uniqueActors',
       title: 'Unique Actors',
       type: 'countDistinct',
-      column: "prEvents.employeeId",
+      column: "pr_events.employee_id",
       drillMembers: ['Employees.name', 'PREvents.prNumber', 'PREvents.eventType']
     }
   },
@@ -1006,7 +1006,7 @@ registerEntityCube('Teams', {
       targetCube: 'Departments',
       relationship: 'belongsTo',
       on: [
-        { source: "teams.departmentId", target: "departments.id" }
+        { source: "teams.department_id", target: "departments.id" }
       ]
     },
     EmployeeTeams: {
@@ -1014,7 +1014,7 @@ registerEntityCube('Teams', {
       relationship: 'hasMany',
       preferredFor: ['Productivity'],
       on: [
-        { source: "teams.id", target: "employeeTeams.teamId" }
+        { source: "teams.id", target: "employee_teams.team_id" }
       ]
     }
   },
@@ -1043,13 +1043,13 @@ registerEntityCube('Teams', {
       name: 'departmentId',
       title: 'Department ID',
       type: 'number',
-      column: "teams.departmentId"
+      column: "teams.department_id"
     },
     createdAt: {
       name: 'createdAt',
       title: 'Created At',
       type: 'time',
-      column: "teams.createdAt"
+      column: "teams.created_at"
     }
   },
 
@@ -1071,7 +1071,7 @@ registerEntityCube('EmployeeTeams', {
   title: 'Employee Team Membership',
   description: 'Employee team assignments and roles',
 
-  tableName: "employeeTeams",
+  tableName: "employee_teams",
 
   joins: {
     Employees: {
@@ -1079,7 +1079,7 @@ registerEntityCube('EmployeeTeams', {
       relationship: 'belongsTo',
       preferredFor: ['Productivity'],
       on: [
-        { source: "employeeTeams.employeeId", target: "employees.id" }
+        { source: "employee_teams.employee_id", target: "employees.id" }
       ]
     },
     Teams: {
@@ -1087,7 +1087,7 @@ registerEntityCube('EmployeeTeams', {
       relationship: 'belongsTo',
       preferredFor: ['Productivity'],
       on: [
-        { source: "employeeTeams.teamId", target: "teams.id" }
+        { source: "employee_teams.team_id", target: "teams.id" }
       ]
     }
   },
@@ -1105,32 +1105,32 @@ registerEntityCube('EmployeeTeams', {
       name: 'id',
       title: 'Membership ID',
       type: 'number',
-      column: "employeeTeams.id",
+      column: "employee_teams.id",
       primaryKey: true
     },
     employeeId: {
       name: 'employeeId',
       title: 'Employee ID',
       type: 'number',
-      column: "employeeTeams.employeeId"
+      column: "employee_teams.employee_id"
     },
     teamId: {
       name: 'teamId',
       title: 'Team ID',
       type: 'number',
-      column: "employeeTeams.teamId"
+      column: "employee_teams.team_id"
     },
     role: {
       name: 'role',
       title: 'Team Role',
       type: 'string',
-      column: "employeeTeams.role"
+      column: "employee_teams.role"
     },
     joinedAt: {
       name: 'joinedAt',
       title: 'Joined Team',
       type: 'time',
-      column: "employeeTeams.joinedAt"
+      column: "employee_teams.joined_at"
     }
   },
 
@@ -1139,30 +1139,30 @@ registerEntityCube('EmployeeTeams', {
       name: 'count',
       title: 'Total Memberships',
       type: 'count',
-      column: "employeeTeams.id",
+      column: "employee_teams.id",
       drillMembers: ['Employees.name', 'Teams.name', 'EmployeeTeams.role', 'EmployeeTeams.joinedAt']
     },
     uniqueEmployees: {
       name: 'uniqueEmployees',
       title: 'Unique Employees',
       type: 'countDistinct',
-      column: "employeeTeams.employeeId",
+      column: "employee_teams.employee_id",
       drillMembers: ['Employees.name', 'Teams.name', 'EmployeeTeams.role']
     },
     uniqueTeams: {
       name: 'uniqueTeams',
       title: 'Unique Teams',
       type: 'countDistinct',
-      column: "employeeTeams.teamId",
+      column: "employee_teams.team_id",
       drillMembers: ['Teams.name', 'Employees.name', 'EmployeeTeams.role']
     },
     leadCount: {
       name: 'leadCount',
       title: 'Team Leads',
       type: 'count',
-      column: "employeeTeams.id",
+      column: "employee_teams.id",
       filters: [
-        () => eq(schema["employeeTeams"].role, 'lead')
+        () => eq(schema["employee_teams"].role, 'lead')
       ],
       drillMembers: ['Employees.name', 'Teams.name', 'EmployeeTeams.joinedAt']
     }
