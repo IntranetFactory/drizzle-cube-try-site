@@ -578,8 +578,10 @@ aiApp.post('/explain/analyze', async (c) => {
 
     console.log('[AI] Analyzing EXPLAIN plan...', { model: geminiModel })
 
-    // Map duckdb to postgres for prompt (DuckDB uses PostgreSQL-compatible syntax)
-    const dbType = explainResult.summary.database === 'duckdb' ? 'postgres' : explainResult.summary.database
+    // Map unsupported database types to postgres for prompt
+    const supportedDbTypes = ['postgres', 'mysql', 'sqlite'] as const
+    const rawDbType = explainResult.summary.database === 'duckdb' ? 'postgres' : explainResult.summary.database
+    const dbType = supportedDbTypes.includes(rawDbType as any) ? rawDbType as 'postgres' | 'mysql' | 'sqlite' : 'postgres' as const
     const prompt = buildExplainAnalysisPrompt(
       dbType,
       cubeSchema,

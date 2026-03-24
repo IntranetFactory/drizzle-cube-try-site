@@ -53,11 +53,8 @@ Update the `DATABASE_URL` in your `.env` file to point to your existing PostgreS
 ### 2. Install Dependencies
 
 ```bash
-# Install server dependencies
+# Install all dependencies
 npm install
-
-# Install client dependencies
-npm run install:client
 ```
 
 ### 3. Configure Environment
@@ -102,13 +99,13 @@ npm run db:seed
 npm run dev:full
 
 # Or start them separately:
-# npm run dev:server  # Backend on http://localhost:3001
+# npm run dev:server  # Backend on http://localhost:3459
 # npm run dev:client  # Frontend on http://localhost:3000
 ```
 
 - **React Dashboard**: http://localhost:3000
-- **API Server**: http://localhost:3001
-- **API Documentation**: http://localhost:3001/api/docs
+- **API Server**: http://localhost:3459
+- **API Documentation**: http://localhost:3459/api/docs
 - **pgAdmin** (if using Docker): http://localhost:5050
   - Email: `admin@drizzlecube.local`
   - Password: `admin123`
@@ -141,7 +138,7 @@ npm run dev:full
 ### Employee Count by Department
 
 ```bash
-curl -X POST http://localhost:3001/cubejs-api/v1/load \
+curl -X POST http://localhost:3459/cubejs-api/v1/load \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-token" \
   -d '{
@@ -154,7 +151,7 @@ curl -X POST http://localhost:3001/cubejs-api/v1/load \
 ### Salary Analytics
 
 ```bash
-curl -X POST http://localhost:3001/cubejs-api/v1/load \
+curl -X POST http://localhost:3459/cubejs-api/v1/load \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-token" \
   -d '{
@@ -167,7 +164,7 @@ curl -X POST http://localhost:3001/cubejs-api/v1/load \
 ### Active Employees with Filters
 
 ```bash
-curl -X POST http://localhost:3001/cubejs-api/v1/load \
+curl -X POST http://localhost:3459/cubejs-api/v1/load \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-token" \
   -d '{
@@ -277,7 +274,7 @@ async function getSecurityContext(c: any): Promise<SecurityContext> {
 ### Environment Variables
 
 - `DATABASE_URL` - PostgreSQL connection string
-- `PORT` - Server port (default: 3001)
+- `PORT` - Server port (default: 3459)
 - `NODE_ENV` - Environment (development/production)
 - `JWT_SECRET` - JWT signing secret (if using JWT auth)
 
@@ -326,7 +323,7 @@ This API is compatible with Cube.js frontends:
 - [Cube.js Playground](https://cube.dev/docs/dev-tools/dev-playground)
 - **drizzle-cube React components** (included in this example)
 
-Simply point your frontend to `http://localhost:3001/cubejs-api/v1` as the API URL.
+Simply point your frontend to `http://localhost:3459/cubejs-api/v1` as the API URL.
 
 ## AI Assistant
 
@@ -371,10 +368,10 @@ The AI features are available via proxy endpoints to avoid CORS issues:
 **Example:**
 ```bash
 # Check if AI is configured
-curl http://localhost:3001/api/ai/health
+curl http://localhost:3459/api/ai/health
 
 # Generate query
-curl -X POST http://localhost:3001/api/ai/generate \
+curl -X POST http://localhost:3459/api/ai/generate \
   -H "X-API-Key: AIza..." \
   -H "Content-Type: application/json" \
   -d '{
