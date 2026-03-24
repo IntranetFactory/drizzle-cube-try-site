@@ -105,8 +105,13 @@
   --dc-ai: #8b5cf6;
   --dc-ai-hover: #7c3aed;
 
-  /* Page Background Gradient */
-  --dc-page-gradient: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 50%, #f0f9ff 100%);
+  /* Page Background */
+  --dc-page-gradient: #f8fafb;
+  --dc-iso-line: rgba(0, 0, 0, 0.07);
+  --dc-iso-size: 40px;
+  --dc-text-glow: rgba(248, 250, 251, 0.95);
+  --dc-iso-grid-url: url('/iso-grid-green.svg');
+  --dc-iso-opacity: 0.09;
 
   /* drizzle-cube compatibility aliases and layout tokens */
   --dc-bg: var(--dc-surface);
@@ -223,8 +228,13 @@ html.dark {
   --dc-ai: #a78bfa;
   --dc-ai-hover: #8b5cf6;
 
-  /* Page Background Gradient */
-  --dc-page-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0c1929 100%);
+  /* Page Background */
+  --dc-page-gradient: #0f172a;
+  --dc-iso-line: rgba(255, 255, 255, 0.05);
+  --dc-iso-size: 40px;
+  --dc-text-glow: rgba(15, 23, 42, 0.95);
+  --dc-iso-grid-url: url('/iso-grid-light.svg');
+  --dc-iso-opacity: 0.06;
 
   /* drizzle-cube compatibility aliases */
   --dc-bg: var(--dc-surface);
@@ -335,8 +345,11 @@ html.neon {
   --dc-ai: #ff00ff;
   --dc-ai-hover: #cc00cc;
 
-  /* Page Background Gradient */
-  --dc-page-gradient: linear-gradient(135deg, #0a0118 0%, #1a0a2e 25%, #0a1a2e 50%, #1a0a2e 75%, #0a0118 100%);
+  /* Page Background */
+  --dc-page-gradient: #0a0118;
+  --dc-text-glow: rgba(10, 1, 24, 0.95);
+  --dc-iso-grid-url: url('/iso-grid-light.svg');
+  --dc-iso-opacity: 0.06;
 
   /* drizzle-cube compatibility aliases */
   --dc-bg: var(--dc-surface);
@@ -447,8 +460,11 @@ html.cyberpunk {
   --dc-ai: #ff00ff;
   --dc-ai-hover: #cc00cc;
 
-  /* Page Background Gradient */
-  --dc-page-gradient: linear-gradient(135deg, #fff176 0%, #ffeb3b 25%, #fdd835 50%, #ffeb3b 75%, #fff176 100%);
+  /* Page Background */
+  --dc-page-gradient: #fff176;
+  --dc-text-glow: rgba(255, 241, 118, 0.95);
+  --dc-iso-grid-url: url('/iso-grid-green.svg');
+  --dc-iso-opacity: 0.06;
 
   /* drizzle-cube compatibility aliases */
   --dc-bg: var(--dc-surface);
@@ -505,6 +521,24 @@ html.cyberpunk {
   .bg-dc-ai { background-color: var(--dc-ai); }
   .bg-dc-ai-gradient { background: linear-gradient(to right, var(--dc-ai), var(--dc-ai-hover)); }
 
-  /* Page gradient */
-  .bg-dc-page-gradient { background: var(--dc-page-gradient); }
+  /* Page background with fixed isometric cube grid */
+  .bg-dc-page-gradient {
+    background-color: var(--dc-page-gradient);
+    position: relative;
+  }
+  .bg-dc-page-gradient::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: var(--dc-iso-grid-url);
+    background-size: 400px;
+    background-repeat: repeat;
+    opacity: var(--dc-iso-opacity);
+  }
+  .bg-dc-page-gradient > * {
+    position: relative;
+    z-index: 1;
+  }
 }
