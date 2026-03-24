@@ -150,11 +150,6 @@ notebooksApp.put('/:id', async (c) => {
       return c.json({ error: 'At least one field must be provided for update' }, 400)
     }
 
-    // Protect the sample notebook (id=1) from any changes
-    if (id === 1) {
-      return c.json({ error: 'The sample notebook is read-only' }, 403)
-    }
-
     const updateData: {
       updated_at: Date
       name?: string
