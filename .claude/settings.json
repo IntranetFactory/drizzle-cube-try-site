@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls /c/dev/drizzle-cube-try-site/client/src/*.d.ts)",
+      "Bash(find C:devoauth-hono-mcppackagesserver -name *.ts -not -path */node_modules/*)",
+      "Bash(powershell -Command \"Get-Content ''C:\\\\dev\\\\oauth-hono-mcp\\\\packages\\\\server\\\\index.ts''\")",
+      "Bash(powershell -Command \"ls ''C:\\\\dev\\\\oauth-hono-mcp\\\\packages\\\\server''\")",
+      "Bash(powershell -Command \"ls ''C:\\\\dev\\\\oauth-hono-mcp\\\\packages\\\\server\\\\src''\")",
+      "Bash(powershell -Command \"Get-Content ''C:\\\\dev\\\\oauth-hono-mcp\\\\packages\\\\server\\\\src\\\\index.ts''\")",
+      "Bash(powershell -Command \"Get-Content ''C:\\\\dev\\\\oauth-hono-mcp\\\\packages\\\\server\\\\src\\\\auth.ts''\")",
+      "Bash(powershell -Command \"Get-Content ''C:\\\\dev\\\\oauth-hono-mcp\\\\packages\\\\server\\\\.dev.vars''\")",
+      "Bash(powershell -Command \"Remove-Item ''C:\\\\dev\\\\oauth-hono-mcp\\\\packages\\\\server\\\\src\\\\index.ts.new''\")",
+      "Bash(git -C \"C:/dev/oauth-hono-mcp\" checkout -- packages/server/src/index.ts)"
+    ],
+    "additionalDirectories": [
+      "C:\\dev\\oauth-hono-mcp\\packages\\server\\src"
+    ]
+  }
+}
