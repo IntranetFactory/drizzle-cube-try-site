@@ -128,7 +128,7 @@ function buildOutHeaders(c: any, extra?: Record<string, string>): Record<string,
   }
   const authorization = c.req.header('Authorization')
   const xApiKey = c.req.header('x-api-key')
-  if (authorization) headers['Authorization'] = authorization
+  if (authorization) headers['Authorization'] = authorization.startsWith('Bearer ') ? authorization : `Bearer ${authorization}`
   if (xApiKey) headers['x-api-key'] = xApiKey
   return headers
 }
@@ -142,13 +142,16 @@ app.use('*', async (c, next) => {
   })
 
   if (authRes.status !== 200) {
-    return new Response(authRes.body, {
+    const body = await authRes.text()
+    console.log('[semantius] error', authRes.status, body)
+    return new Response(body, {
       status: authRes.status,
       headers: Object.fromEntries(authRes.headers.entries()),
     })
   }
 
   const semantiusUser = await authRes.json()
+  console.log('[semantius] semantiusUser', semantiusUser)
   c.set('semantiusUser', semantiusUser)
 
   await next()
@@ -265,6 +268,7 @@ const cubeApp = createCubeApp({
   schema,
   extractSecurityContext,
   engineType: 'postgres',
+  basePath: '/v1',
   // Public site mode: users provide their own API keys and choose their provider.
   agent: {
     allowClientApiKey: true,
@@ -277,11 +281,30 @@ app.use('/:domain/cubejs-api/*', async (c, next) => {
   const domain = c.req.param('domain')
   console.log('domain:', domain)
   c.set('domain', domain)
+
+  const semantiusUser = c.get('semantiusUser') as { postgrestUrl: string; access_token: string }
+  if (semantiusUser?.postgrestUrl && semantiusUser?.access_token) {
+    try {
+      const rpcRes = await fetch(`${semantiusUser.postgrestUrl}/rpc/get_module_cubes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${semantiusUser.access_token}`,
+        },
+        body: JSON.stringify({ p_module_name: domain }),
+      })
+      const rpcData = await rpcRes.json()
+      console.log('[get_module_cubes] result:', JSON.stringify(rpcData, null, 2))
+    } catch (err) {
+      console.error('[get_module_cubes] error:', err)
+    }
+  }
+
   await next()
 })
 
-// Mount cube routes under /:domain
-app.route('/:domain', cubeApp)
+// Only /:domain/cubejs-api/* routes get the domain prefix
+app.route('/:domain/cubejs-api', cubeApp)
 
 // Mount analytics pages API with database and PDF export configuration
 app.use('/api/analytics-pages/*', async (c, next) => {
