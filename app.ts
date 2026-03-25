@@ -22,6 +22,8 @@ interface Variables {
   cfAccountId?: string
   cfApiToken?: string
   publicUrl?: string
+  semantiusUser: unknown
+  domain: string
 }
 
 // Environment detection - handle both Node.js and Cloudflare Workers
@@ -114,11 +116,43 @@ const app = new Hono<{ Variables: Variables }>()
 // Add middleware
 app.use('*', logger())
 app.use('*', cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'], // Add your frontend URLs
-  allowMethods: ['GET', 'POST', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization', 'X-Agent-Api-Key'],
-  credentials: true
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'X-Agent-Api-Key', 'X-Agent-Provider', 'X-Agent-Model', 'X-Agent-Base-URL'],
 }))
+
+function buildOutHeaders(c: any, extra?: Record<string, string>): Record<string, string> {
+  const headers: Record<string, string> = {
+    'x-auth-server-api-key': getEnvVar('AUTH_SERVER_API_KEY'),
+    ...extra,
+  }
+  const authorization = c.req.header('Authorization')
+  const xApiKey = c.req.header('x-api-key')
+  if (authorization) headers['Authorization'] = authorization
+  if (xApiKey) headers['x-api-key'] = xApiKey
+  return headers
+}
+
+// Semantius auth middleware - validates every request
+app.use('*', async (c, next) => {
+  const org = getEnvVar('SEMANTIUS_ORG')
+
+  const authRes = await fetch(`https://api.semantius.cloud/tenant/${org}`, {
+    headers: buildOutHeaders(c),
+  })
+
+  if (authRes.status !== 200) {
+    return new Response(authRes.body, {
+      status: authRes.status,
+      headers: Object.fromEntries(authRes.headers.entries()),
+    })
+  }
+
+  const semantiusUser = await authRes.json()
+  c.set('semantiusUser', semantiusUser)
+
+  await next()
+})
 
 // Root endpoint with available routes
 app.get('/', (c) => {
@@ -231,12 +265,6 @@ const cubeApp = createCubeApp({
   schema,
   extractSecurityContext,
   engineType: 'postgres',
-  cors: {
-    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'],
-    allowMethods: ['GET', 'POST', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization', 'X-Agent-Api-Key', 'X-Agent-Provider', 'X-Agent-Model', 'X-Agent-Base-URL'],
-    credentials: true
-  },
   // Public site mode: users provide their own API keys and choose their provider.
   agent: {
     allowClientApiKey: true,
@@ -244,8 +272,16 @@ const cubeApp = createCubeApp({
   }
 })
 
-// Mount cube routes under the main app
-app.route('/', cubeApp)
+// Extract domain from URL and store in context
+app.use('/:domain/cubejs-api/*', async (c, next) => {
+  const domain = c.req.param('domain')
+  console.log('domain:', domain)
+  c.set('domain', domain)
+  await next()
+})
+
+// Mount cube routes under /:domain
+app.route('/:domain', cubeApp)
 
 // Mount analytics pages API with database and PDF export configuration
 app.use('/api/analytics-pages/*', async (c, next) => {

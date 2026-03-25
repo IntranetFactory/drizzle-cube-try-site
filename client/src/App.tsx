@@ -64,7 +64,7 @@ function App() {
     <HelmetProvider>
       <CubeProvider
         apiOptions={{
-          apiUrl: '/cubejs-api/v1',
+          apiUrl: '/nwind/cubejs-api/v1',
           headers: {
             'Authorization': org.token.access_token
           }
