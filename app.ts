@@ -3,7 +3,6 @@
  * This demonstrates how to create a production-ready analytics API using Hono and drizzle-cube
  */
 
-import { writeFileSync } from 'fs'
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { cors } from 'hono/cors'
@@ -256,14 +255,13 @@ app.get('/api/docs', (c) => {
   })
 })
 
-// Per-request cube app: fetch domain cubes, filter, and create isolated app
+// Per-request cube app: fetch domain cubes, build cubes, and create isolated app
 app.all('/:domain/cubejs-api/*', async (c) => {
   const domain = c.req.param('domain')
   console.log('domain:', domain)
   c.set('domain', domain)
 
-  let domain_cubes: any[] | undefined
-
+  // Fetch domain_cubes from Semantius and set on context
   const semantiusUser = c.get('semantiusUser') as { postgrestUrl: string; access_token: string }
   if (semantiusUser?.postgrestUrl && semantiusUser?.access_token) {
     try {
@@ -275,41 +273,18 @@ app.all('/:domain/cubejs-api/*', async (c) => {
         },
         body: JSON.stringify({ p_module_name: domain }),
       })
-      domain_cubes = await rpcRes.json() as any[]
+      const domain_cubes = await rpcRes.json() as any[]
       c.set('domain_cubes', domain_cubes)
-      //writeFileSync('domain_cubes.json', JSON.stringify(domain_cubes, null, 2))
-
-      const cubeNames = new Set<string>()
-      domain_cubes.forEach((item: any, index: number) => {
-        const name = item.table?.table_name
-        if (name) {
-          cubeNames.add(name)
-          console.log('[cube]', name)
-          if (index === 0) {
-            console.log('[cube first entry]', JSON.stringify(item, null, 2))
-          }
-        }
-      })
     } catch (err) {
       console.error('[get_module_cubes] error:', err)
     }
   }
 
-  // Build cubes per-request — context (c) and domain_cubes passed through
+  // buildCubes reads domain_cubes from context and derives everything
   const { schema, allCubes, cubeSchemaJSON } = buildCubes(c)
 
-  // Build module_cubes from cubeSchemaJSON filtered by domain tables
-  if (domain_cubes) {
-    const tableNames = new Set(domain_cubes.map((item: any) => item.table?.table_name).filter(Boolean))
-    const module_cubes: Record<string, any> = {}
-    for (const tableName of tableNames) {
-      if (cubeSchemaJSON[tableName]) {
-        module_cubes[tableName] = cubeSchemaJSON[tableName]
-      }
-    }
-    c.set('module_cubes', module_cubes)
-    //writeFileSync('module_cubes.json', JSON.stringify(module_cubes, null, 2))
-  }
+  // Expose cubeSchemaJSON as module_cubes for downstream consumers
+  c.set('module_cubes', cubeSchemaJSON)
 
   const cubeApp = createCubeApp({
     cubes: allCubes,

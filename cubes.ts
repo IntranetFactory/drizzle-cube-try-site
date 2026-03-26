@@ -8,8 +8,7 @@ import type { SQL } from 'drizzle-orm'
 import { defineCube } from 'drizzle-cube/server'
 import type { BaseQueryDefinition, Cube, Dimension, Measure, CubeJoin, CubeRelationship, Hierarchy } from 'drizzle-cube/server'
 import type { AnyColumn } from 'drizzle-orm'
-import * as staticSchema from './drizzle_schema'
-import { schemaToJSON, jsonToSchema, type SchemaJSON, type SerializedColumn } from './schemaGenerator'
+import { jsonToSchema, type SchemaJSON, type SerializedColumn } from './schemaGenerator'
 
 
 // ─── EntityCube: same shape as Cube, will be refined to be fully serializable ───
@@ -1348,19 +1347,166 @@ function entityCubesToCubes(entityCubes: EntityCube[], schemaObj: Record<string,
   return Array.from(cubeRegistry.values())
 }
 
-const entityCubesArray: EntityCube[] = Array.from(entityCubeRegistry.values())
+// ─── Convert domain_cubes (semantic model) → EntityCube[] ───
 
-/**
- * Build schema and cubes per-request.
- * Currently uses the static drizzle schema — replace internals to use domain_cubes later.
- */
-export function buildCubes(c?: any) {
-  let x = c.get('domain_cubes'); console.log("xxx",x);
-  const schemaJSON = schemaToJSON(staticSchema as unknown as Record<string, unknown>)
-  const cubeSchemaJSON = entityCubesToJSONSchema(entityCubesArray)
-  const schema = jsonToSchema(cubeSchemaJSON)
-  const allCubes = entityCubesToCubes(entityCubesArray, schema as unknown as Record<string, unknown>)
-  return { schema, allCubes, cubeSchemaJSON, schemaJSON }
+function toPascalCase(snake: string): string {
+  return snake.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('')
 }
 
-export { entityCubesArray, entityCubesToCubes, jsonToSchema, schemaToJSON }
+function domainPropToDimensionType(prop: any): 'string' | 'number' | 'boolean' | 'time' {
+  if (prop.format === 'date' || prop.format === 'date-time') return 'time'
+  if (prop.type === 'integer' || prop.type === 'number') return 'number'
+  if (prop.type === 'boolean') return 'boolean'
+  return 'string'
+}
+
+function domainCubesToEntityCubes(domainCubes: any[]): EntityCube[] {
+  const tableNames = new Set(domainCubes.map((dc: any) => dc.table.table_name))
+
+  return domainCubes.map((dc: any) => {
+    const tableName: string = dc.table.table_name
+    const cubeName = toPascalCase(tableName)
+    const properties: Record<string, any> = dc.properties || {}
+
+    const dimensions: Record<string, EntityDimension> = {}
+    const measures: Record<string, EntityMeasure> = {}
+    const joins: Record<string, EntityCubeJoin> = {}
+
+    for (const [fieldName, prop] of Object.entries(properties) as [string, any][]) {
+      // Skip system timestamp fields
+      if (prop.inputMode === 'disabled') continue
+
+      // Reference fields → belongsTo join + FK dimension
+      if (prop.format === 'reference' || prop.format === 'parent') {
+        if (prop.reference_table && tableNames.has(prop.reference_table)) {
+          const targetCubeName = toPascalCase(prop.reference_table)
+          joins[targetCubeName] = {
+            targetCube: targetCubeName,
+            relationship: 'belongsTo',
+            on: [{
+              source: `${tableName}.${fieldName}`,
+              target: `${prop.reference_table}.${prop.reference_table_id_column || 'id'}`
+            }]
+          }
+        }
+        dimensions[fieldName] = {
+          name: fieldName,
+          title: prop.title || fieldName,
+          type: 'number',
+          column: `${tableName}.${fieldName}`
+        }
+        continue
+      }
+
+      // Regular field → dimension
+      const isPk = prop.ctype === 'id'
+      dimensions[fieldName] = {
+        name: fieldName,
+        title: prop.title || fieldName,
+        type: isPk ? 'number' : domainPropToDimensionType(prop),
+        column: `${tableName}.${fieldName}`,
+        ...(isPk && { primaryKey: true })
+      }
+    }
+
+    // Always add a count measure on the id column
+    const idField = Object.entries(properties).find(([_, p]: [string, any]) => p.ctype === 'id')
+    if (idField) {
+      measures.count = {
+        name: 'count',
+        title: `Total ${dc.table.plural_label || cubeName}`,
+        type: 'count',
+        column: `${tableName}.${idField[0]}`
+      }
+    }
+
+    // Children → hasMany joins
+    if (dc.children) {
+      for (const child of dc.children as any[]) {
+        const [childTable, childColumn] = (child.id as string).split('.')
+        if (tableNames.has(childTable)) {
+          const childCubeName = toPascalCase(childTable)
+          if (!joins[childCubeName]) {
+            joins[childCubeName] = {
+              targetCube: childCubeName,
+              relationship: 'hasMany',
+              on: [{ source: `${tableName}.id`, target: `${childTable}.${childColumn}` }]
+            }
+          }
+        }
+      }
+    }
+
+    return {
+      name: cubeName,
+      title: dc.table.plural_label || cubeName,
+      description: dc.description || '',
+      tableName,
+      dimensions,
+      measures,
+      ...(Object.keys(joins).length > 0 && { joins })
+    } as EntityCube
+  })
+}
+
+// ─── Convert domain_cubes (semantic model) → SchemaJSON (drizzle data access) ───
+
+function domainPropToSqlType(prop: any): SerializedColumn['type'] {
+  if (prop.format === 'reference' || prop.format === 'parent') return 'integer'
+  if (prop.format === 'date' || prop.format === 'date-time') return 'timestamp'
+  if (prop.type === 'integer') return 'integer'
+  if (prop.type === 'number') return 'real'
+  if (prop.type === 'boolean') return 'boolean'
+  return 'text'
+}
+
+function domainCubesToSchemaJSON(domainCubes: any[]): SchemaJSON {
+  const result: SchemaJSON = {}
+
+  for (const dc of domainCubes) {
+    const tableName: string = dc.table.table_name
+    const properties: Record<string, any> = dc.properties || {}
+    const columns: SerializedColumn[] = []
+
+    for (const [fieldName, prop] of Object.entries(properties) as [string, any][]) {
+      const isPk = prop.ctype === 'id'
+      columns.push({
+        key: fieldName,
+        name: fieldName,
+        type: domainPropToSqlType(prop),
+        primaryKey: isPk,
+        notNull: isPk || prop.inputMode === 'required',
+        hasDefault: isPk || (!!prop.default && prop.default !== ''),
+        ...(isPk && { generatedIdentity: 'always' as const }),
+      })
+    }
+
+    result[tableName] = { tableName, columns }
+  }
+
+  return result
+}
+
+/**
+ * Build schema and cubes per-request from domain_cubes (semantic model).
+ * domain_cubes is the single source for both drizzle schema and cube definitions.
+ */
+export function buildCubes(c?: any) {
+  const domainCubes: any[] | undefined = c?.get('domain_cubes')
+
+  // Derive both from domain_cubes when available, fall back to static registry
+  const entityCubes = domainCubes
+    ? domainCubesToEntityCubes(domainCubes)
+    : Array.from(entityCubeRegistry.values())
+
+  const cubeSchemaJSON = domainCubes
+    ? domainCubesToSchemaJSON(domainCubes)
+    : entityCubesToJSONSchema(entityCubes)
+
+  const schema = jsonToSchema(cubeSchemaJSON)
+  const allCubes = entityCubesToCubes(entityCubes, schema as unknown as Record<string, unknown>)
+
+  return { schema, allCubes, cubeSchemaJSON }
+}
+
+export { domainCubesToEntityCubes, domainCubesToSchemaJSON, entityCubesToCubes, jsonToSchema }
