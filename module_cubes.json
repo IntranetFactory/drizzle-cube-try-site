@@ -1,0 +1,104 @@
+{
+  "employees": {
+    "tableName": "employees",
+    "columns": [
+      {
+        "key": "id",
+        "name": "id",
+        "type": "integer",
+        "primaryKey": true,
+        "notNull": true,
+        "hasDefault": true,
+        "generatedIdentity": "always"
+      },
+      {
+        "key": "name",
+        "name": "name",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "email",
+        "name": "email",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "department_id",
+        "name": "department_id",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "active",
+        "name": "active",
+        "type": "boolean",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "created_at",
+        "name": "created_at",
+        "type": "timestamp",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "city",
+        "name": "city",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "region",
+        "name": "region",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "country",
+        "name": "country",
+        "type": "text",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "latitude",
+        "name": "latitude",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "longitude",
+        "name": "longitude",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      },
+      {
+        "key": "salary",
+        "name": "salary",
+        "type": "integer",
+        "primaryKey": false,
+        "notNull": false,
+        "hasDefault": false
+      }
+    ]
+  }
+}

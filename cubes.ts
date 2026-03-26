@@ -12,7 +12,7 @@ import * as staticSchema from './drizzle_schema'
 import { schemaToJSON, jsonToSchema, type SchemaJSON, type SerializedColumn } from './schemaGenerator'
 
 const t0 = performance.now()
-const schemaJSON = schemaToJSON(staticSchema as unknown as Record<string, unknown>)
+let schemaJSON = schemaToJSON(staticSchema as unknown as Record<string, unknown>)
 const t1 = performance.now()
 
 // Persist schema as JSON when running in Node.js (skipped in Cloudflare Workers)
@@ -24,6 +24,7 @@ if (typeof process !== 'undefined' && process.versions?.node) {
     })
   })
 }
+
 
 const t2 = performance.now()
 // @ts-ignore kept for reference
@@ -87,6 +88,7 @@ export interface EntityCube {
 const entityCubeRegistry = new Map<string, EntityCube>()
 
 function registerEntityCube(name: string, config: Omit<EntityCube, 'name'>): EntityCube {
+  console.log(`[registerEntityCube] Registering cube: ${name}`)
   const cube: EntityCube = { name, ...config }
   entityCubeRegistry.set(name, cube)
   return cube
@@ -1383,4 +1385,6 @@ if (typeof process !== 'undefined' && process.versions?.node) {
 
 const dynamicSchema = jsonToSchema(cubeSchemaJSON)
 export { dynamicSchema as schema }
+console.log("ECA", entityCubesArray)
 export const allCubes: Cube[] = entityCubesToCubes(entityCubesArray, dynamicSchema as unknown as Record<string, unknown>)
+export { cubeSchemaJSON }

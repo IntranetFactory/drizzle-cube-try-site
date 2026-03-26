@@ -3,6 +3,7 @@
  * This demonstrates how to create a production-ready analytics API using Hono and drizzle-cube
  */
 
+import { writeFileSync } from 'fs'
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { cors } from 'hono/cors'
@@ -12,7 +13,7 @@ import postgres from 'postgres'
 import { neon } from '@neondatabase/serverless'
 import { createCubeApp } from 'drizzle-cube/adapters/hono'
 import type { SecurityContext, DrizzleDatabase } from 'drizzle-cube/server'
-import { schema, allCubes } from './cubes'
+import { schema, allCubes, cubeSchemaJSON } from './cubes'
 import analyticsApp from './src/analytics-routes'
 import notebooksApp from './src/notebooks-routes'
 import aiApp from './src/ai-routes'
@@ -24,6 +25,7 @@ interface Variables {
   publicUrl?: string
   semantiusUser: unknown
   domain: string
+  domain_cubes: any[]
 }
 
 // Environment detection - handle both Node.js and Cloudflare Workers
@@ -151,7 +153,7 @@ app.use('*', async (c, next) => {
   }
 
   const semantiusUser = await authRes.json()
-  console.log('[semantius] semantiusUser', semantiusUser)
+  // console.log('[semantius] semantiusUser', semantiusUser)
   c.set('semantiusUser', semantiusUser)
 
   await next()
@@ -293,8 +295,32 @@ app.use('/:domain/cubejs-api/*', async (c, next) => {
         },
         body: JSON.stringify({ p_module_name: domain }),
       })
-      const rpcData = await rpcRes.json()
-      console.log('[get_module_cubes] result:', JSON.stringify(rpcData, null, 2))
+      const domain_cubes = await rpcRes.json() as any[]
+      c.set('domain_cubes', domain_cubes)
+      //writeFileSync('domain_cubes.json', JSON.stringify(domain_cubes, null, 2))
+
+      const cubes = new Set<string>()
+      domain_cubes.forEach((item: any, index: number) => {
+        const name = item.table?.table_name
+        if (name) {
+          cubes.add(name)
+          console.log('[cube]', name)
+          if (index === 0) {
+            console.log('[cube first entry]', JSON.stringify(item, null, 2))
+          }
+        }
+      })
+
+      const module_cubes: Record<string, any> = {}
+      for (const tableName of cubes) {
+        if (cubeSchemaJSON[tableName]) {
+          module_cubes[tableName] = cubeSchemaJSON[tableName]
+        }
+      }
+      
+      c.set('module_cubes', module_cubes)
+      //writeFileSync('module_cubes.json', JSON.stringify(module_cubes, null, 2))
+
     } catch (err) {
       console.error('[get_module_cubes] error:', err)
     }
