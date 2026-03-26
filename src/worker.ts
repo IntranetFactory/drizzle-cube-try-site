@@ -13,7 +13,7 @@ import { neon, neonConfig } from '@neondatabase/serverless'
 import { createCubeApp } from 'drizzle-cube/adapters/hono'
 import type { SecurityContext, DrizzleDatabase, CacheConfig } from 'drizzle-cube/server'
 import { CloudflareKVProvider } from './cache/cloudflare-kv-provider'
-import { schema, allCubes } from '../cubes.js'
+import { buildCubes } from '../cubes.js'
 import analyticsApp from './analytics-routes'
 import notebooksApp from './notebooks-routes'
 import aiApp from './ai-routes'
@@ -32,11 +32,11 @@ function createDatabase(databaseUrl: string) {
   if (isNeonUrl(databaseUrl)) {
     console.log('🚀 Connecting to Neon serverless database')
     const sql = neon(databaseUrl)
-    return drizzleNeon(sql, { schema })
+    return drizzleNeon(sql, {})
   } else {
     console.log('🐘 Connecting to local PostgreSQL database')
     const client = postgres(databaseUrl)
-    return drizzle(client, { schema })
+    return drizzle(client, {})
   }
 }
 
@@ -49,7 +49,7 @@ function createDatabaseWithHyperdrive(
   if (hyperdrive) {
     console.log('⚡ Connecting via Hyperdrive (connection pooling enabled)')
     const client = postgres(hyperdrive.connectionString)
-    return drizzle(client, { schema })
+    return drizzle(client, {})
   }
   // Priority 2: Fall back to existing logic (Neon serverless or local PostgreSQL)
   return createDatabase(databaseUrl)
@@ -150,10 +150,12 @@ const createCubeApiApp = (db: DrizzleDatabase, cacheKV?: KVNamespace) => {
     }
   } : undefined
 
+  const { schema, allCubes } = buildCubes()
+
   return createCubeApp({
     cubes: allCubes,
     drizzle: db,
-    schema,
+    schema: schema as any,
     extractSecurityContext: getSecurityContext,
     engineType: 'postgres',
     cache: cacheConfig,

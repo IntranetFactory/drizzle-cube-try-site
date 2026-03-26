@@ -13,7 +13,8 @@ import postgres from 'postgres'
 import { neon } from '@neondatabase/serverless'
 import { createCubeApp } from 'drizzle-cube/adapters/hono'
 import type { SecurityContext, DrizzleDatabase } from 'drizzle-cube/server'
-import { schema, allCubes, cubeSchemaJSON } from './cubes'
+import { buildCubes } from './cubes'
+import * as drizzleSchema from './drizzle_schema'
 import analyticsApp from './src/analytics-routes'
 import notebooksApp from './src/notebooks-routes'
 import aiApp from './src/ai-routes'
@@ -26,6 +27,7 @@ interface Variables {
   semantiusUser: unknown
   domain: string
   domain_cubes: any[]
+  module_cubes: Record<string, any>
 }
 
 // Environment detection - handle both Node.js and Cloudflare Workers
@@ -63,11 +65,11 @@ function createDatabase(databaseUrl: string) {
   if (isNeonUrl(databaseUrl)) {
     console.log('🚀 Connecting to Neon serverless database')
     const sql = neon(databaseUrl)
-    return drizzleNeon(sql, { schema })
+    return drizzleNeon(sql, { schema: drizzleSchema })
   } else {
     console.log('🐘 Connecting to local PostgreSQL database')
     const client = postgres(databaseUrl)
-    return drizzle(client, { schema })
+    return drizzle(client, { schema: drizzleSchema })
   }
 }
 
@@ -203,6 +205,7 @@ app.get('/health', (c) => {
 app.get('/api/docs', (c) => {
   // Get metadata from the cube app (we could also create a temporary semantic layer for this)
   // For now, we'll provide static documentation. In a real app, you might extract this from the cubes
+  const { allCubes } = buildCubes()
   const metadata = allCubes.map(cube => ({
     name: cube.name,
     title: cube.title || cube.name,
@@ -210,7 +213,7 @@ app.get('/api/docs', (c) => {
     dimensions: Object.keys(cube.dimensions || {}),
     measures: Object.keys(cube.measures || {})
   }))
-  
+
   return c.json({
     title: 'Employee Analytics API',
     description: 'Drizzle-cube powered analytics API with Cube.js compatibility',
@@ -227,13 +230,7 @@ app.get('/api/docs', (c) => {
       'POST /api/notebooks': 'Create notebook',
       'POST /api/ai/explain/analyze': 'Analyze EXPLAIN plan with AI recommendations'
     },
-    cubes: metadata.map(cube => ({
-      name: cube.name,
-      title: cube.title,
-      description: cube.description,
-      dimensions: Object.keys(cube.dimensions || {}),
-      measures: Object.keys(cube.measures || {})
-    })),
+    cubes: metadata,
     examples: {
       'Employee count by department': {
         measures: ['Employees.count'],
@@ -259,30 +256,13 @@ app.get('/api/docs', (c) => {
   })
 })
 
-// Debug: Check if meta field is present on PREvents cube
-const prEventsCube = allCubes.find(c => c.name === 'PREvents')
-console.log('PREvents cube meta:', prEventsCube?.meta)
-
-// Mount the cube API routes
-const cubeApp = createCubeApp({
-  cubes: allCubes,
-  drizzle: db as DrizzleDatabase,
-  schema,
-  extractSecurityContext,
-  engineType: 'postgres',
-  basePath: '/v1',
-  // Public site mode: users provide their own API keys and choose their provider.
-  agent: {
-    allowClientApiKey: true,
-    maxTurns: 25
-  }
-})
-
-// Extract domain from URL and store in context
-app.use('/:domain/cubejs-api/*', async (c, next) => {
+// Per-request cube app: fetch domain cubes, filter, and create isolated app
+app.all('/:domain/cubejs-api/*', async (c) => {
   const domain = c.req.param('domain')
   console.log('domain:', domain)
   c.set('domain', domain)
+
+  let domain_cubes: any[] | undefined
 
   const semantiusUser = c.get('semantiusUser') as { postgrestUrl: string; access_token: string }
   if (semantiusUser?.postgrestUrl && semantiusUser?.access_token) {
@@ -295,42 +275,61 @@ app.use('/:domain/cubejs-api/*', async (c, next) => {
         },
         body: JSON.stringify({ p_module_name: domain }),
       })
-      const domain_cubes = await rpcRes.json() as any[]
+      domain_cubes = await rpcRes.json() as any[]
       c.set('domain_cubes', domain_cubes)
       //writeFileSync('domain_cubes.json', JSON.stringify(domain_cubes, null, 2))
 
-      const cubes = new Set<string>()
+      const cubeNames = new Set<string>()
       domain_cubes.forEach((item: any, index: number) => {
         const name = item.table?.table_name
         if (name) {
-          cubes.add(name)
+          cubeNames.add(name)
           console.log('[cube]', name)
           if (index === 0) {
             console.log('[cube first entry]', JSON.stringify(item, null, 2))
           }
         }
       })
-
-      const module_cubes: Record<string, any> = {}
-      for (const tableName of cubes) {
-        if (cubeSchemaJSON[tableName]) {
-          module_cubes[tableName] = cubeSchemaJSON[tableName]
-        }
-      }
-      
-      c.set('module_cubes', module_cubes)
-      //writeFileSync('module_cubes.json', JSON.stringify(module_cubes, null, 2))
-
     } catch (err) {
       console.error('[get_module_cubes] error:', err)
     }
   }
 
-  await next()
-})
+  // Build cubes per-request — context (c) and domain_cubes passed through
+  const { schema, allCubes, cubeSchemaJSON } = buildCubes(c)
 
-// Only /:domain/cubejs-api/* routes get the domain prefix
-app.route('/:domain/cubejs-api', cubeApp)
+  // Build module_cubes from cubeSchemaJSON filtered by domain tables
+  if (domain_cubes) {
+    const tableNames = new Set(domain_cubes.map((item: any) => item.table?.table_name).filter(Boolean))
+    const module_cubes: Record<string, any> = {}
+    for (const tableName of tableNames) {
+      if (cubeSchemaJSON[tableName]) {
+        module_cubes[tableName] = cubeSchemaJSON[tableName]
+      }
+    }
+    c.set('module_cubes', module_cubes)
+    //writeFileSync('module_cubes.json', JSON.stringify(module_cubes, null, 2))
+  }
+
+  const cubeApp = createCubeApp({
+    cubes: allCubes,
+    drizzle: db as DrizzleDatabase,
+    schema: schema as any,
+    extractSecurityContext,
+    engineType: 'postgres',
+    basePath: '/v1',
+    agent: {
+      allowClientApiKey: true,
+      maxTurns: 25
+    }
+  })
+
+  // Strip /:domain/cubejs-api prefix so the inner app sees /v1/*
+  const url = new URL(c.req.url)
+  url.pathname = url.pathname.replace(`/${domain}/cubejs-api`, '')
+  const rewrittenRequest = new Request(url.toString(), c.req.raw)
+  return cubeApp.fetch(rewrittenRequest, c.env)
+})
 
 // Mount analytics pages API with database and PDF export configuration
 app.use('/api/analytics-pages/*', async (c, next) => {

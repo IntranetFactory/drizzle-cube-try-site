@@ -11,7 +11,7 @@ import { SemanticLayerCompiler, createDatabaseExecutor } from 'drizzle-cube/serv
 import type { ExplainResult, AIExplainAnalysis } from 'drizzle-cube/server'
 import { buildExplainAnalysisPrompt, formatCubeSchemaForExplain, formatExistingIndexes } from 'drizzle-cube/server'
 import { settings, schema } from '../drizzle_schema'
-import { allCubes } from '../cubes'
+import { buildCubes } from '../cubes'
 
 interface GeminiMessageRequest {
   contents: Array<{
@@ -228,6 +228,7 @@ function buildSystemPrompt(cubeSchema: string, userPrompt: string): string {
 
 // Get cube schema for the AI prompt from the actual semantic layer
 function formatCubeSchemaForAI(db: DrizzleDatabase): string {
+  const { allCubes } = buildCubes()
   try {
     // Create semantic layer to get real metadata
     const semanticLayer = new SemanticLayerCompiler({
@@ -235,7 +236,7 @@ function formatCubeSchemaForAI(db: DrizzleDatabase): string {
       schema,
       engineType: 'postgres'
     })
-    
+
     // Register all cubes
     allCubes.forEach(cube => {
       semanticLayer.registerCube(cube)
@@ -558,6 +559,7 @@ aiApp.post('/explain/analyze', async (c) => {
       engineType: 'postgres'
     })
 
+    const { allCubes } = buildCubes()
     allCubes.forEach(cube => {
       semanticLayer.registerCube(cube)
     })

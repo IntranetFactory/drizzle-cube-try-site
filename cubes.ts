@@ -11,27 +11,6 @@ import type { AnyColumn } from 'drizzle-orm'
 import * as staticSchema from './drizzle_schema'
 import { schemaToJSON, jsonToSchema, type SchemaJSON, type SerializedColumn } from './schemaGenerator'
 
-const t0 = performance.now()
-let schemaJSON = schemaToJSON(staticSchema as unknown as Record<string, unknown>)
-const t1 = performance.now()
-
-// Persist schema as JSON when running in Node.js (skipped in Cloudflare Workers)
-if (typeof process !== 'undefined' && process.versions?.node) {
-  import('fs').then(fs => {
-    import('url').then(url => {
-      const dir = url.fileURLToPath(new URL('.', import.meta.url))
-      fs.writeFileSync(dir + 'schema.json', JSON.stringify(schemaJSON, null, 2))
-    })
-  })
-}
-
-
-const t2 = performance.now()
-// @ts-ignore kept for reference
-const schema = jsonToSchema(schemaJSON) as unknown as typeof staticSchema
-const t3 = performance.now()
-
-console.log(`schemaToJSON: ${(t1 - t0).toFixed(2)}ms | jsonToSchema: ${(t3 - t2).toFixed(2)}ms`)
 
 // ─── EntityCube: same shape as Cube, will be refined to be fully serializable ───
 
@@ -1371,20 +1350,17 @@ function entityCubesToCubes(entityCubes: EntityCube[], schemaObj: Record<string,
 
 const entityCubesArray: EntityCube[] = Array.from(entityCubeRegistry.values())
 
-const cubeSchemaJSON = entityCubesToJSONSchema(entityCubesArray)
-
-if (typeof process !== 'undefined' && process.versions?.node) {
-  import('fs').then(fs => {
-    import('url').then(url => {
-      const dir = url.fileURLToPath(new URL('.', import.meta.url))
-      fs.writeFileSync(dir + 'entity_cubes.json', JSON.stringify(entityCubesArray, null, 2))
-      fs.writeFileSync(dir + 'cube_schema.json', JSON.stringify(cubeSchemaJSON, null, 2))
-    })
-  })
+/**
+ * Build schema and cubes per-request.
+ * Currently uses the static drizzle schema — replace internals to use domain_cubes later.
+ */
+export function buildCubes(c?: any) {
+  let x = c.get('domain_cubes'); console.log("xxx",x);
+  const schemaJSON = schemaToJSON(staticSchema as unknown as Record<string, unknown>)
+  const cubeSchemaJSON = entityCubesToJSONSchema(entityCubesArray)
+  const schema = jsonToSchema(cubeSchemaJSON)
+  const allCubes = entityCubesToCubes(entityCubesArray, schema as unknown as Record<string, unknown>)
+  return { schema, allCubes, cubeSchemaJSON, schemaJSON }
 }
 
-const dynamicSchema = jsonToSchema(cubeSchemaJSON)
-export { dynamicSchema as schema }
-console.log("ECA", entityCubesArray)
-export const allCubes: Cube[] = entityCubesToCubes(entityCubesArray, dynamicSchema as unknown as Record<string, unknown>)
-export { cubeSchemaJSON }
+export { entityCubesArray, entityCubesToCubes, jsonToSchema, schemaToJSON }
