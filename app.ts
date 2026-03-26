@@ -7,9 +7,9 @@ import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { cors } from 'hono/cors'
 import { drizzle } from 'drizzle-orm/postgres-js'
-import { drizzle as drizzleNeon } from 'drizzle-orm/neon-http'
+import { drizzle as drizzleNeon } from 'drizzle-orm/neon-serverless'
 import postgres from 'postgres'
-import { neon } from '@neondatabase/serverless'
+import { Pool } from '@neondatabase/serverless'
 import { createCubeApp } from 'drizzle-cube/adapters/hono'
 import type { SecurityContext, DrizzleDatabase } from 'drizzle-cube/server'
 import { buildCubes } from './cubes'
@@ -17,6 +17,8 @@ import * as drizzleSchema from './drizzle_schema'
 import analyticsApp from './src/analytics-routes'
 import notebooksApp from './src/notebooks-routes'
 import aiApp from './src/ai-routes'
+import { sql } from 'drizzle-orm'
+import type { RLSSetupFn } from 'drizzle-cube'
 
 interface Variables {
   db: DrizzleDatabase
@@ -45,11 +47,11 @@ function getEnvironment() {
 // Get environment variable with fallback for different runtimes
 function getEnvVar(key: string, fallback: string = ''): string {
   const env = getEnvironment()
-  
+
   if (env === 'node' && typeof process !== 'undefined') {
     return process.env[key] || fallback
   }
-  
+
   // For Cloudflare Workers, we'll set this up in the handler
   return fallback
 }
@@ -60,11 +62,12 @@ function isNeonUrl(url: string): boolean {
 }
 
 // Create database connection factory
+// *TODO* remove drizzleSchema 
 function createDatabase(databaseUrl: string) {
   if (isNeonUrl(databaseUrl)) {
     console.log('🚀 Connecting to Neon serverless database')
-    const sql = neon(databaseUrl)
-    return drizzleNeon(sql, { schema: drizzleSchema })
+    const pool = new Pool({ connectionString: databaseUrl })
+    return drizzleNeon(pool, { schema: drizzleSchema })
   } else {
     console.log('🐘 Connecting to local PostgreSQL database')
     const client = postgres(databaseUrl)
@@ -72,16 +75,15 @@ function createDatabase(databaseUrl: string) {
   }
 }
 
-// Default database connection for Node.js environment
+// Fallback database connection for Node.js environment (used if semantiusUser has no databaseUrl)
 const defaultConnectionString = 'postgresql://drizzle_user:drizzle_pass123@localhost:54921/drizzle_cube_db'
-const db = createDatabase(getEnvVar('DATABASE_URL', defaultConnectionString))
 
 // Security context extractor - customize based on your auth system
 // This function is called for EVERY API request to extract user permissions
 async function extractSecurityContext(c: any): Promise<SecurityContext> {
   // Example: Extract from JWT token or session
   const authHeader = c.req.header('Authorization')
-  
+
   // For development/demo purposes, allow requests without auth
   if (!authHeader) {
     return {
@@ -90,13 +92,13 @@ async function extractSecurityContext(c: any): Promise<SecurityContext> {
       // Add other security context fields as needed
     }
   }
-  
+
   // In production, decode JWT and extract user info
   // For this example, we'll use a simple approach
   try {
     // Mock JWT decode - replace with your actual JWT library
     authHeader.replace('Bearer ', '')
-    
+
     // For demo purposes, assume organisationId is in the token
     // In real implementation, decode JWT and extract user context
     return {
@@ -154,8 +156,13 @@ app.use('*', async (c, next) => {
   }
 
   const semantiusUser = await authRes.json()
-  // console.log('[semantius] semantiusUser', semantiusUser)
+  console.log('[semantius] semantiusUser context') //, semantiusUser)
   c.set('semantiusUser', semantiusUser)
+
+  // Create per-tenant database connection from semantiusUser.databaseUrl
+  const dbUrl = (semantiusUser as any)?.databaseUrl || getEnvVar('DATABASE_URL', defaultConnectionString)
+  const db = createDatabase(dbUrl)
+  c.set('db', db as DrizzleDatabase)
 
   await next()
 })
@@ -275,6 +282,7 @@ app.all('/:domain/cubejs-api/*', async (c) => {
       })
       const domain_cubes = await rpcRes.json() as any[]
       c.set('domain_cubes', domain_cubes)
+      console.log(`[get_module_cubes] fetched ${domain_cubes.length} cubes for domain "${domain}"`)
     } catch (err) {
       console.error('[get_module_cubes] error:', err)
     }
@@ -286,16 +294,39 @@ app.all('/:domain/cubejs-api/*', async (c) => {
   // Expose cubeSchemaJSON as module_cubes for downstream consumers
   c.set('module_cubes', cubeSchemaJSON)
 
+  const db = c.get('db')
+
+  const rlsSetup: RLSSetupFn = async (tx, securityContext) => {
+
+    console.log('RLS setup -claims:', securityContext.semantiusUser?.claims)
+
+    const sub = securityContext.semantiusUser?.claims?.sub
+        
+    await tx.execute(sql.raw(`SET ROLE authenticated`))
+    await tx.execute(sql.raw(`SELECT set_config('role', 'semantius_user', true)`))
+    await tx.execute(sql.raw(`SELECT set_config('request.jwt.claim.sub', '${sub}', true)`))
+    await tx.execute(sql.raw(`SELECT set_config('request.jwt.claim.role', 'authenticated', true)`))
+    await tx.execute(sql.raw(`SELECT set_config('request.jwt.claim.aud', '', true)`))
+  }
+
+
+
   const cubeApp = createCubeApp({
     cubes: allCubes,
-    drizzle: db as DrizzleDatabase,
+    drizzle: db,
     schema: schema as any,
-    extractSecurityContext,
     engineType: 'postgres',
     basePath: '/v1',
+    rlsSetup,
     agent: {
       allowClientApiKey: true,
       maxTurns: 25
+    },
+    extractSecurityContext: async () => {
+      // console.log('[semantius] extractSecurityContext - semantiusUser:', semantiusUser)
+      return {
+        semantiusUser
+      };
     }
   })
 
@@ -308,7 +339,6 @@ app.all('/:domain/cubejs-api/*', async (c) => {
 
 // Mount analytics pages API with database and PDF export configuration
 app.use('/api/analytics-pages/*', async (c, next) => {
-  c.set('db', db as DrizzleDatabase)
   // PDF export configuration (from .env for Node.js)
   c.set('cfAccountId', getEnvVar('CLOUDFLARE_ACCOUNT_ID'))
   c.set('cfApiToken', getEnvVar('CF_BROWSER_RENDERING_TOKEN'))
@@ -318,15 +348,13 @@ app.use('/api/analytics-pages/*', async (c, next) => {
 app.route('/api/analytics-pages', analyticsApp)
 
 // Mount notebooks API with database access
-app.use('/api/notebooks/*', async (c, next) => {
-  c.set('db', db as DrizzleDatabase)
+app.use('/api/notebooks/*', async (_c, next) => {
   await next()
 })
 app.route('/api/notebooks', notebooksApp)
 
 // Mount AI proxy routes with database access
-app.use('/api/ai/*', async (c, next) => {
-  c.set('db', db as DrizzleDatabase)
+app.use('/api/ai/*', async (_c, next) => {
   await next()
 })
 app.route('/api/ai', aiApp)
@@ -368,15 +396,15 @@ app.get('/api/github-stars', async (c) => {
 app.get('/api/user-info', async (c) => {
   try {
     const securityContext = await extractSecurityContext(c)
-    
+
     return c.json({
       organisationId: securityContext.organisationId,
       userId: securityContext.userId,
       message: 'This endpoint uses the same security context as the cube API'
     })
   } catch (error) {
-    return c.json({ 
-      error: error instanceof Error ? error.message : 'Unauthorized' 
+    return c.json({
+      error: error instanceof Error ? error.message : 'Unauthorized'
     }, 401)
   }
 })
@@ -404,5 +432,3 @@ app.notFound((c) => {
 
 export default app
 
-// Export for testing
-export { db }
