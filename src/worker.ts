@@ -111,10 +111,10 @@ const app = new Hono<{ Variables: Variables; Bindings: CloudflareEnv }>()
 // Add middleware
 app.use('*', logger())
 app.use('*', cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173'],
-  allowMethods: ['GET', 'POST', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization', 'X-Agent-Api-Key'],
-  credentials: true
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Agent-Api-Key', 'X-Agent-Provider', 'X-Agent-Model', 'X-Agent-Base-URL', 'MCP-Protocol-Version', 'Mcp-Session-Id'],
+  exposeHeaders: ['MCP-Protocol-Version', 'Mcp-Session-Id'],
 }))
 
 // Initialize database and semantic layer per request
@@ -158,12 +158,12 @@ const createCubeApiApp = (db: DrizzleDatabase, cacheKV?: KVNamespace) => {
     schema: schema as any,
     extractSecurityContext: getSecurityContext,
     engineType: 'postgres',
+    mcp: { enabled: true, app: true },
     cache: cacheConfig,
     cors: {
-      origin: ['http://localhost:3000', 'http://localhost:5173'],
-      allowMethods: ['GET', 'POST', 'OPTIONS'],
-      allowHeaders: ['Content-Type', 'Authorization', 'X-Agent-Api-Key'],
-      credentials: true
+      origin: '*',
+      allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+      allowHeaders: ['Content-Type', 'Authorization', 'X-Agent-Api-Key', 'X-Agent-Provider', 'X-Agent-Model', 'X-Agent-Base-URL', 'MCP-Protocol-Version', 'Mcp-Session-Id'],
     },
     // Public site mode: users provide their own Anthropic API keys.
     agent: {
@@ -192,7 +192,6 @@ cubeApiApp.use('*', async (c) => {
 // Mount the cube API routes
 app.route('/cubejs-api', cubeApiApp)
 app.route('/mcp', cubeApiApp)
-
 
 // API info endpoint
 app.get('/api', (c) => {
@@ -304,6 +303,12 @@ app.get('/api/github-stars', async (c) => {
 })
 
 // Serve static assets and handle SPA routing
+// Explicitly 404 well-known OAuth paths — prevents the SPA catch-all from
+// serving index.html (200) which Claude interprets as valid OAuth metadata
+app.get('/.well-known/*', (c) => c.notFound())
+app.post('/register', (c) => c.notFound())
+app.post('/oauth/*', (c) => c.notFound())
+
 app.get('*', async (c) => {
   // Use the ASSETS binding to serve static files with SPA fallback
   return await c.env.ASSETS.fetch(c.req.raw)

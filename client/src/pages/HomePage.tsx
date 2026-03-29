@@ -186,8 +186,8 @@ export default function HomePage() {
           EXPLORE STRIP -- 4 prominent entry points
           ================================================================ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8 pb-14 sm:pb-20">
-        {/* Primary features — full width */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+        {/* Primary features */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
           {[
             { to: firstDashboardPath, icon: ChartBarIcon, label: 'Dashboards', desc: 'Charts, KPIs, data tables', accent: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400', border: 'hover:border-emerald-400', wave: 'wave-1' },
             { to: '/notebooks', icon: SparklesIcon, label: 'Agentic Notebooks', desc: 'AI-powered analysis', accent: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400', border: 'hover:border-amber-400', wave: 'wave-2' },
@@ -207,6 +207,23 @@ export default function HomePage() {
               <ArrowRightIcon className="w-4 h-4 text-dc-text-disabled ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
             </Link>
           ))}
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText('https://try.drizzle-cube.dev/mcp')
+              const el = document.getElementById('mcp-copy-label')
+              if (el) { el.textContent = 'Copied!'; setTimeout(() => { el.textContent = 'Copy' }, 2000) }
+            }}
+            className="group flex items-center gap-3.5 px-4 py-4 bg-dc-surface border border-dc-border rounded-xl transition-all duration-200 active:scale-[0.98] animate-wave hover:border-cyan-400 wave-3 text-left"
+          >
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400">
+              <LinkIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-sm font-semibold text-dc-text block">Connect via MCP</span>
+              <span className="text-xs text-dc-text-muted">Claude, ChatGPT, or any MCP client</span>
+            </div>
+            <span id="mcp-copy-label" className="shrink-0 ml-auto px-2.5 py-1 text-xs font-medium rounded-md bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 group-hover:bg-cyan-200 dark:group-hover:bg-cyan-800/40 transition-colors">Copy</span>
+          </button>
         </div>
         {/* Secondary features */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -231,6 +248,7 @@ export default function HomePage() {
             </Link>
           ))}
         </div>
+
       </section>
 
       {/* ================================================================
@@ -500,7 +518,8 @@ app.route('/', cubeApp) // Done!`}</CodeBlock>
               {[
                 { name: 'drizzle_cube_discover', desc: 'Find cubes by topic or intent' },
                 { name: 'drizzle_cube_validate', desc: 'Validate queries, get auto-corrections' },
-                { name: 'drizzle_cube_load', desc: 'Execute queries, return results' },
+                { name: 'drizzle_cube_load', desc: 'Execute queries and return data' },
+                { name: 'drizzle_cube_chart', desc: 'Execute queries with interactive chart visualization' },
               ].map((tool) => (
                 <div key={tool.name} className="bg-dc-surface-secondary rounded-lg px-3 py-2.5 border border-dc-border">
                   <code className="text-xs font-mono text-dc-text">{tool.name}</code>
@@ -523,6 +542,7 @@ app.route('/', cubeApp) // Done!`}</CodeBlock>
                 { n: '1', t: 'Rich Semantic Metadata', d: 'Agents fetch cube definitions, descriptions, relationships' },
                 { n: '2', t: 'Cross-Cube Queries', d: 'AI builds queries spanning cubes -- joins handled automatically' },
                 { n: '3', t: 'Secure Execution', d: 'Every query runs through your security context' },
+                { n: '4', t: 'Interactive Charts (MCP App)', d: 'AI renders bar, line, pie, scatter and more directly in the conversation' },
               ].map((s) => (
                 <div key={s.n} className="flex items-start gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-dc-surface-secondary border border-dc-border flex items-center justify-center shrink-0 mt-0.5">
@@ -543,9 +563,17 @@ app.route('/', cubeApp) // Done!`}</CodeBlock>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h3 className="text-sm font-semibold text-dc-text mb-1">Connect AI Tools to Your App</h3>
-              <p className="text-xs text-dc-text-muted mb-4">Your customers connect their AI tools directly to your analytics</p>
+              <p className="text-xs text-dc-text-muted mb-4">Most AI tools just need the MCP server URL &mdash; connect in seconds</p>
 
-              <div className="flex flex-wrap gap-1.5 mb-4">
+              <div className="bg-dc-surface-secondary rounded-lg border border-dc-border p-3.5 mb-4">
+                <p className="text-xs text-dc-text-secondary mb-2">MCP Server URL:</p>
+                <div className="bg-dc-surface rounded-md p-3 border border-dc-border">
+                  <code className="text-sm font-mono text-dc-primary select-all">https://try.drizzle-cube.dev/mcp</code>
+                </div>
+                <p className="text-[11px] text-dc-text-muted mt-2.5">Paste this URL into Claude.ai, ChatGPT, Cursor, Windsurf, n8n, or any MCP-compatible tool.</p>
+              </div>
+
+              <div className="flex flex-wrap gap-1.5 mb-3">
                 {([
                   { id: 'claude-desktop' as const, label: 'Claude Desktop' },
                   { id: 'claude-web' as const, label: 'Claude.ai' },
@@ -587,34 +615,18 @@ app.route('/', cubeApp) // Done!`}</CodeBlock>
                 )}
                 {activeAITool === 'claude-web' && (
                   <div className="p-3.5">
-                    <p className="text-xs text-dc-text-secondary mb-2.5">Add as a Connector in Claude.ai:</p>
-                    <div className="bg-dc-surface rounded-md p-3 border border-dc-border overflow-x-auto">
-                      <pre className="text-xs font-mono text-dc-text-secondary whitespace-pre"><code>{`Server URL: https://try.drizzle-cube.dev/mcp
-
-Tools: drizzle_cube_discover, drizzle_cube_validate, drizzle_cube_load`}</code></pre>
-                    </div>
-                    <p className="text-[11px] text-dc-text-muted mt-2">Settings &rarr; Connectors &rarr; Add Connector</p>
+                    <p className="text-xs text-dc-text-secondary mb-2.5">Settings &rarr; Connectors &rarr; Add Connector, then paste the URL above.</p>
                   </div>
                 )}
                 {activeAITool === 'chatgpt' && (
                   <div className="p-3.5">
-                    <p className="text-xs text-dc-text-secondary mb-2.5">Enable Developer Mode in ChatGPT:</p>
-                    <div className="bg-dc-surface rounded-md p-3 border border-dc-border overflow-x-auto">
-                      <pre className="text-xs font-mono text-dc-text-secondary whitespace-pre"><code>{`Server URL: https://try.drizzle-cube.dev/mcp
-
-Tools: drizzle_cube_discover, drizzle_cube_validate, drizzle_cube_load`}</code></pre>
-                    </div>
-                    <p className="text-[11px] text-dc-text-muted mt-2">Settings &rarr; Connectors &rarr; Advanced &rarr; Developer Mode</p>
+                    <p className="text-xs text-dc-text-secondary mb-2.5">Settings &rarr; Connectors &rarr; Advanced &rarr; Developer Mode, then paste the URL above.</p>
                   </div>
                 )}
                 {activeAITool === 'n8n' && (
                   <div className="p-3.5">
-                    <p className="text-xs text-dc-text-secondary mb-2.5">Use the n8n MCP Client node:</p>
-                    <div className="bg-dc-surface rounded-md p-3 border border-dc-border overflow-x-auto">
-                      <pre className="text-xs font-mono text-dc-text-secondary whitespace-pre"><code>{`MCP Server: https://try.drizzle-cube.dev/mcp
-Workflow:   AI Agent -> MCP Client -> Your Analytics`}</code></pre>
-                    </div>
-                    <p className="text-[11px] text-dc-text-muted mt-2">
+                    <p className="text-xs text-dc-text-secondary mb-2.5">Use an AI Agent &rarr; MCP Client node with the URL above.</p>
+                    <p className="text-[11px] text-dc-text-muted mt-1">
                       See <a href="https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.mcpclienttool/" target="_blank" rel="noopener noreferrer" className="text-dc-primary hover:underline">n8n MCP Client docs</a>
                     </p>
                   </div>
@@ -622,10 +634,11 @@ Workflow:   AI Agent -> MCP Client -> Your Analytics`}</code></pre>
               </div>
             </div>
 
-            <div className="hidden md:flex items-center justify-center">
+            <div className="hidden md:flex flex-col items-center justify-center gap-3">
               <div className="rounded-lg overflow-hidden border border-dc-border max-w-sm" style={{ boxShadow: '0 8px 24px -6px rgba(0,0,0,0.1)' }}>
-                <img src="/claude_mcp.png" alt="Claude using Drizzle Cube MCP tools" className="w-full h-auto block" />
+                <img src="/chart-inline.png" alt="Interactive chart rendered inline in Claude via MCP App" className="w-full h-auto block" />
               </div>
+              <p className="text-[11px] text-dc-text-muted text-center max-w-xs">Interactive charts render directly in the conversation via the MCP Apps protocol</p>
             </div>
           </div>
         </div>
