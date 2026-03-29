@@ -124,8 +124,9 @@ const app = new Hono<{ Variables: Variables }>()
 app.use('*', logger())
 app.use('*', cors({
   origin: '*',
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'X-Agent-Api-Key', 'X-Agent-Provider', 'X-Agent-Model', 'X-Agent-Base-URL'],
+  allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Agent-Api-Key', 'X-Agent-Provider', 'X-Agent-Model', 'X-Agent-Base-URL', 'MCP-Protocol-Version', 'Mcp-Session-Id'],
+  exposeHeaders: ['MCP-Protocol-Version', 'Mcp-Session-Id'],
 }))
 
 function buildOutHeaders(c: any, extra?: Record<string, string>): Record<string, string> {
@@ -285,6 +286,7 @@ app.all('/:domain/cubejs-api/*', async (c) => {
       const domain_cubes = await rpcRes.json() as any[]
       c.set('domain_cubes', domain_cubes)
       console.log(`[get_module_cubes] fetched ${domain_cubes.length} cubes for domain "${domain}"`)
+      // writeFileSync('get_domain_cubes.json', JSON.stringify(domain_cubes, null, 2))
     } catch (err) {
       console.error('[get_module_cubes] error:', err)
     }
@@ -301,7 +303,7 @@ app.all('/:domain/cubejs-api/*', async (c) => {
 
   const rlsSetup: RLSSetupFn = async (tx, securityContext) => {
 
-    console.log('RLS setup -claims:', securityContext.semantiusUser?.claims)
+    // console.log('RLS setup-claims:', securityContext.semantiusUser?.claims)
 
     const sub = securityContext.semantiusUser?.claims?.sub
         

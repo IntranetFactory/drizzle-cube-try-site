@@ -1,920 +1,1734 @@
 [
   {
-    "name": "Categories",
-    "title": "Categories",
+    "$schema": "https://semantius.com/meta/sem-schema/v1",
+    "$id": "https://example.com/schemas/categories.schema.json",
+    "title": "Category",
     "description": "Product categories",
-    "tableName": "categories",
-    "dimensions": {
+    "table": {
+      "table_name": "categories",
+      "singular": "category",
+      "plural": "categories",
+      "singular_label": "Category",
+      "plural_label": "Categories",
+      "icon_url": "",
+      "description": "Product categories",
+      "module_id": 1004,
+      "view_permission": "nwind:view",
+      "edit_permission": "nwind:manage",
+      "id_column": "id",
+      "label_column": "category_name",
+      "managed": true,
+      "searchable": true,
+      "is_child": false,
+      "edit_mode": "auto",
+      "cube_mode": "auto",
+      "created_at": "2026-03-29T14:32:01.701209+00:00",
+      "updated_at": "2026-03-29T14:32:01.701209+00:00",
+      "search_vector": "'categori':1C,2C,3C,4A,5C,7B 'product':6B"
+    },
+    "type": "object",
+    "properties": {
       "id": {
-        "name": "id",
+        "type": "integer",
+        "ctype": "id",
         "title": "Id",
-        "type": "number",
-        "column": "categories.id",
-        "primaryKey": true
+        "width": "default",
+        "is_core": true,
+        "inputMode": "readonly",
+        "searchable": false,
+        "description": "",
+        "field_order": 1
       },
       "category_name": {
-        "name": "category_name",
-        "title": "Category",
         "type": "string",
-        "column": "categories.category_name"
+        "ctype": "label",
+        "title": "Category",
+        "width": "default",
+        "default": "",
+        "is_core": true,
+        "inputMode": "required",
+        "searchable": true,
+        "description": "",
+        "field_order": 1
       },
       "description": {
-        "name": "description",
-        "title": "Description",
         "type": "string",
-        "column": "categories.description"
+        "title": "Description",
+        "width": "w",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": true,
+        "description": "Description of the product category",
+        "field_order": 20
+      },
+      "created_at": {
+        "type": "string",
+        "title": "Created At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999998
+      },
+      "updated_at": {
+        "type": "string",
+        "title": "Updated At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999999
       }
     },
-    "measures": {
-      "count": {
-        "name": "count",
-        "title": "Total Categories",
-        "type": "count",
-        "column": "categories.id"
-      }
-    }
+    "required": [],
+    "children": [],
+    "additionalProperties": false
   },
   {
-    "name": "Customers",
-    "title": "Customers",
+    "$schema": "https://semantius.com/meta/sem-schema/v1",
+    "$id": "https://example.com/schemas/customers.schema.json",
+    "title": "Customer",
     "description": "Customer information and contact details",
-    "tableName": "customers",
-    "dimensions": {
+    "table": {
+      "table_name": "customers",
+      "singular": "customer",
+      "plural": "customers",
+      "singular_label": "Customer",
+      "plural_label": "Customers",
+      "icon_url": "",
+      "description": "Customer information and contact details",
+      "module_id": 1004,
+      "view_permission": "nwind:view",
+      "edit_permission": "nwind:manage",
+      "id_column": "id",
+      "label_column": "company_name",
+      "managed": true,
+      "searchable": true,
+      "is_child": false,
+      "edit_mode": "auto",
+      "cube_mode": "auto",
+      "created_at": "2026-03-29T14:32:01.701209+00:00",
+      "updated_at": "2026-03-29T14:32:01.701209+00:00",
+      "search_vector": "'contact':9B 'custom':1C,2C,3C,4A,5C,6B 'detail':10B 'inform':7B"
+    },
+    "type": "object",
+    "properties": {
       "company_name": {
-        "name": "company_name",
-        "title": "Customer",
         "type": "string",
-        "column": "customers.company_name"
+        "ctype": "label",
+        "title": "Customer",
+        "width": "default",
+        "default": "",
+        "is_core": true,
+        "inputMode": "required",
+        "searchable": true,
+        "description": "",
+        "field_order": 1
       },
       "id": {
-        "name": "id",
+        "type": "integer",
+        "ctype": "id",
         "title": "Id",
-        "type": "number",
-        "column": "customers.id",
-        "primaryKey": true
+        "width": "default",
+        "is_core": true,
+        "inputMode": "readonly",
+        "searchable": false,
+        "description": "",
+        "field_order": 1
       },
       "customer_id": {
-        "name": "customer_id",
-        "title": "Customer ID",
         "type": "string",
-        "column": "customers.customer_id"
+        "title": "Customer ID",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "required",
+        "searchable": true,
+        "description": "Unique short code identifying the customer",
+        "field_order": 10
       },
       "contact_name": {
-        "name": "contact_name",
-        "title": "Contact Name",
         "type": "string",
-        "column": "customers.contact_name"
+        "title": "Contact Name",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": true,
+        "description": "",
+        "field_order": 30
       },
       "contact_title": {
-        "name": "contact_title",
-        "title": "Contact Title",
         "type": "string",
-        "column": "customers.contact_title"
+        "title": "Contact Title",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Job title of the primary contact",
+        "field_order": 40
       },
       "address": {
-        "name": "address",
-        "title": "Street Address",
         "type": "string",
-        "column": "customers.address"
+        "title": "Street Address",
+        "width": "w",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "",
+        "field_order": 50
       },
       "city": {
-        "name": "city",
-        "title": "City",
         "type": "string",
-        "column": "customers.city"
+        "title": "City",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": true,
+        "description": "",
+        "field_order": 60
       },
       "region": {
-        "name": "region",
-        "title": "Region",
         "type": "string",
-        "column": "customers.region"
+        "title": "Region",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "State or province",
+        "field_order": 70
       },
       "postal_code": {
-        "name": "postal_code",
-        "title": "Postal Code",
         "type": "string",
-        "column": "customers.postal_code"
+        "title": "Postal Code",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Postal or ZIP code",
+        "field_order": 80
       },
       "country": {
-        "name": "country",
-        "title": "Country",
         "type": "string",
-        "column": "customers.country"
+        "title": "Country",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": true,
+        "description": "",
+        "field_order": 90
       },
       "phone": {
-        "name": "phone",
-        "title": "Phone",
         "type": "string",
-        "column": "customers.phone"
+        "title": "Phone",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Primary phone number",
+        "field_order": 100
       },
       "fax": {
-        "name": "fax",
-        "title": "Fax",
         "type": "string",
-        "column": "customers.fax"
+        "title": "Fax",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "",
+        "field_order": 110
+      },
+      "created_at": {
+        "type": "string",
+        "title": "Created At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999998
+      },
+      "updated_at": {
+        "type": "string",
+        "title": "Updated At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999999
       }
     },
-    "measures": {
-      "count": {
-        "name": "count",
-        "title": "Total Customers",
-        "type": "count",
-        "column": "customers.id"
-      }
-    }
+    "required": [],
+    "children": [],
+    "additionalProperties": false
   },
   {
-    "name": "EmployeeTerritories",
-    "title": "Employee Territories",
+    "$schema": "https://semantius.com/meta/sem-schema/v1",
+    "$id": "https://example.com/schemas/employee_territories.schema.json",
+    "title": "Employee Territory",
     "description": "Links employees to their assigned territories",
-    "tableName": "employee_territories",
-    "dimensions": {
+    "table": {
+      "table_name": "employee_territories",
+      "singular": "employee_territory",
+      "plural": "employee_territories",
+      "singular_label": "Employee Territory",
+      "plural_label": "Employee Territories",
+      "icon_url": "",
+      "description": "Links employees to their assigned territories",
+      "module_id": 1004,
+      "view_permission": "nwind:view",
+      "edit_permission": "nwind:manage",
+      "id_column": "id",
+      "label_column": "label",
+      "managed": true,
+      "searchable": true,
+      "is_child": true,
+      "edit_mode": "auto",
+      "cube_mode": "auto",
+      "created_at": "2026-03-29T14:32:01.701209+00:00",
+      "updated_at": "2026-03-29T14:32:01.701209+00:00",
+      "search_vector": "'assign':15B 'employe':1C,3C,5C,7A,9C,12B 'link':11B 'territori':2C,4C,6C,8A,10C,16B"
+    },
+    "type": "object",
+    "properties": {
       "id": {
-        "name": "id",
+        "type": "integer",
+        "ctype": "id",
         "title": "Id",
-        "type": "number",
-        "column": "employee_territories.id",
-        "primaryKey": true
+        "width": "default",
+        "is_core": true,
+        "inputMode": "readonly",
+        "searchable": false,
+        "description": "",
+        "field_order": 1
       },
       "label": {
-        "name": "label",
-        "title": "Employee Territory",
         "type": "string",
-        "column": "employee_territories.label"
+        "ctype": "label",
+        "title": "Employee Territory",
+        "width": "default",
+        "default": "",
+        "is_core": true,
+        "inputMode": "required",
+        "searchable": true,
+        "description": "",
+        "field_order": 1
       },
       "employee_id": {
-        "name": "employee_id",
+        "type": "integer",
         "title": "Employee",
-        "type": "number",
-        "column": "employee_territories.employee_id"
+        "width": "default",
+        "format": "parent",
+        "is_core": false,
+        "inputMode": "required",
+        "searchable": false,
+        "description": "Reference to the employee",
+        "field_order": 10,
+        "reference_table": "employees",
+        "reference_delete_mode": "restrict",
+        "reference_table_id_column": "id",
+        "reference_table_label_column": "last_name",
+        "reference_table_plural_label": "Employees",
+        "reference_table_singular_label": "Employee"
       },
       "territory_id": {
-        "name": "territory_id",
+        "type": "integer",
         "title": "Territory",
-        "type": "number",
-        "column": "employee_territories.territory_id"
-      }
-    },
-    "measures": {
-      "count": {
-        "name": "count",
-        "title": "Total Employee Territories",
-        "type": "count",
-        "column": "employee_territories.id"
-      }
-    },
-    "joins": {
-      "Employees": {
-        "targetCube": "Employees",
-        "relationship": "belongsTo",
-        "on": [
-          {
-            "source": "employee_territories.employee_id",
-            "target": "employees.id"
-          }
-        ]
+        "width": "default",
+        "format": "parent",
+        "is_core": false,
+        "inputMode": "required",
+        "searchable": false,
+        "description": "Reference to the territory",
+        "field_order": 20,
+        "reference_table": "territories",
+        "reference_delete_mode": "restrict",
+        "reference_table_id_column": "id",
+        "reference_table_label_column": "territory_description",
+        "reference_table_plural_label": "Territories",
+        "reference_table_singular_label": "Territory"
       },
-      "Territories": {
-        "targetCube": "Territories",
-        "relationship": "belongsTo",
-        "on": [
-          {
-            "source": "employee_territories.territory_id",
-            "target": "territories.id"
-          }
-        ]
+      "created_at": {
+        "type": "string",
+        "title": "Created At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999998
+      },
+      "updated_at": {
+        "type": "string",
+        "title": "Updated At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999999
       }
-    }
+    },
+    "required": [],
+    "children": [],
+    "additionalProperties": false
   },
   {
-    "name": "Employees",
-    "title": "Employees",
+    "$schema": "https://semantius.com/meta/sem-schema/v1",
+    "$id": "https://example.com/schemas/employees.schema.json",
+    "title": "Employee",
     "description": "Employee records and contact information",
-    "tableName": "employees",
-    "dimensions": {
+    "table": {
+      "table_name": "employees",
+      "singular": "employee",
+      "plural": "employees",
+      "singular_label": "Employee",
+      "plural_label": "Employees",
+      "icon_url": "",
+      "description": "Employee records and contact information",
+      "module_id": 1004,
+      "view_permission": "nwind:view",
+      "edit_permission": "nwind:manage",
+      "id_column": "id",
+      "label_column": "last_name",
+      "managed": true,
+      "searchable": true,
+      "is_child": false,
+      "edit_mode": "auto",
+      "cube_mode": "auto",
+      "created_at": "2026-03-29T14:32:01.701209+00:00",
+      "updated_at": "2026-03-29T14:32:01.701209+00:00",
+      "search_vector": "'contact':9B 'employe':1C,2C,3C,4A,5C,6B 'inform':10B 'record':7B"
+    },
+    "type": "object",
+    "properties": {
       "id": {
-        "name": "id",
+        "type": "integer",
+        "ctype": "id",
         "title": "Id",
-        "type": "number",
-        "column": "employees.id",
-        "primaryKey": true
+        "width": "default",
+        "is_core": true,
+        "inputMode": "readonly",
+        "searchable": false,
+        "description": "",
+        "field_order": 1
       },
       "last_name": {
-        "name": "last_name",
-        "title": "Employee",
         "type": "string",
-        "column": "employees.last_name"
+        "ctype": "label",
+        "title": "Employee",
+        "width": "default",
+        "default": "",
+        "is_core": true,
+        "inputMode": "required",
+        "searchable": true,
+        "description": "",
+        "field_order": 1
       },
       "first_name": {
-        "name": "first_name",
-        "title": "First Name",
         "type": "string",
-        "column": "employees.first_name"
+        "title": "First Name",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "required",
+        "searchable": true,
+        "description": "",
+        "field_order": 20
       },
       "title": {
-        "name": "title",
-        "title": "Title",
         "type": "string",
-        "column": "employees.title"
+        "title": "Title",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Job title",
+        "field_order": 30
       },
       "title_of_courtesy": {
-        "name": "title_of_courtesy",
-        "title": "Title of Courtesy",
         "type": "string",
-        "column": "employees.title_of_courtesy"
+        "title": "Title of Courtesy",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Courtesy title (Mr., Ms., Dr., etc.)",
+        "field_order": 40
       },
       "birth_date": {
-        "name": "birth_date",
+        "type": "string",
         "title": "Birth Date",
-        "type": "time",
-        "column": "employees.birth_date"
+        "width": "default",
+        "format": "date",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "",
+        "field_order": 50
       },
       "hire_date": {
-        "name": "hire_date",
+        "type": "string",
         "title": "Hire Date",
-        "type": "time",
-        "column": "employees.hire_date"
+        "width": "default",
+        "format": "date",
+        "default": "CURRENT_DATE",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "",
+        "field_order": 55
       },
       "address": {
-        "name": "address",
-        "title": "Street Address",
         "type": "string",
-        "column": "employees.address"
+        "title": "Street Address",
+        "width": "w",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "",
+        "field_order": 60
       },
       "city": {
-        "name": "city",
-        "title": "City",
         "type": "string",
-        "column": "employees.city"
+        "title": "City",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": true,
+        "description": "",
+        "field_order": 70
       },
       "region": {
-        "name": "region",
-        "title": "Region",
         "type": "string",
-        "column": "employees.region"
+        "title": "Region",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "State or province",
+        "field_order": 80
       },
       "postal_code": {
-        "name": "postal_code",
-        "title": "Postal Code",
         "type": "string",
-        "column": "employees.postal_code"
+        "title": "Postal Code",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Postal or ZIP code",
+        "field_order": 90
       },
       "country": {
-        "name": "country",
-        "title": "Country",
         "type": "string",
-        "column": "employees.country"
+        "title": "Country",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": true,
+        "description": "",
+        "field_order": 100
       },
       "home_phone": {
-        "name": "home_phone",
-        "title": "Home Phone",
         "type": "string",
-        "column": "employees.home_phone"
+        "title": "Home Phone",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "",
+        "field_order": 110
       },
       "extension": {
-        "name": "extension",
-        "title": "Extension",
         "type": "string",
-        "column": "employees.extension"
+        "title": "Extension",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Phone extension",
+        "field_order": 120
       },
       "notes": {
-        "name": "notes",
-        "title": "Notes",
         "type": "string",
-        "column": "employees.notes"
+        "title": "Notes",
+        "width": "w",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "",
+        "field_order": 130
       },
       "photo_path": {
-        "name": "photo_path",
-        "title": "Photo Path",
         "type": "string",
-        "column": "employees.photo_path"
+        "title": "Photo Path",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "",
+        "field_order": 140
       },
       "reports_to": {
-        "name": "reports_to",
+        "type": "integer",
         "title": "Reports To",
-        "type": "number",
-        "column": "employees.reports_to"
-      }
-    },
-    "measures": {
-      "count": {
-        "name": "count",
-        "title": "Total Employees",
-        "type": "count",
-        "column": "employees.id"
-      }
-    },
-    "joins": {
-      "Employees": {
-        "targetCube": "Employees",
-        "relationship": "belongsTo",
-        "on": [
-          {
-            "source": "employees.reports_to",
-            "target": "employees.id"
-          }
-        ]
+        "width": "default",
+        "format": "reference",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Manager this employee reports to",
+        "field_order": 150,
+        "reference_table": "employees",
+        "reference_delete_mode": "restrict",
+        "reference_table_id_column": "id",
+        "reference_table_label_column": "last_name",
+        "reference_table_plural_label": "Employees",
+        "reference_table_singular_label": "Employee"
       },
-      "EmployeeTerritories": {
-        "targetCube": "EmployeeTerritories",
-        "relationship": "hasMany",
-        "on": [
-          {
-            "source": "employees.id",
-            "target": "employee_territories.employee_id"
-          }
-        ]
+      "created_at": {
+        "type": "string",
+        "title": "Created At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999998
+      },
+      "updated_at": {
+        "type": "string",
+        "title": "Updated At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999999
       }
-    }
+    },
+    "required": [],
+    "children": [
+      {
+        "id": "employee_territories.employee_id",
+        "title": "Employee",
+        "singular_label": "Employee Territory",
+        "plural_label": "Employee Territories",
+        "singular_label_parent": "",
+        "plural_label_parent": "",
+        "id_column": "id",
+        "label_column": "label"
+      }
+    ],
+    "additionalProperties": false
   },
   {
-    "name": "OrderDetails",
-    "title": "Order Details",
+    "$schema": "https://semantius.com/meta/sem-schema/v1",
+    "$id": "https://example.com/schemas/order_details.schema.json",
+    "title": "Order Detail",
     "description": "Individual line items within an order",
-    "tableName": "order_details",
-    "dimensions": {
+    "table": {
+      "table_name": "order_details",
+      "singular": "order_detail",
+      "plural": "order_details",
+      "singular_label": "Order Detail",
+      "plural_label": "Order Details",
+      "icon_url": "",
+      "description": "Individual line items within an order",
+      "module_id": 1004,
+      "view_permission": "nwind:view",
+      "edit_permission": "nwind:manage",
+      "id_column": "id",
+      "label_column": "label",
+      "managed": true,
+      "searchable": true,
+      "is_child": true,
+      "edit_mode": "auto",
+      "cube_mode": "auto",
+      "created_at": "2026-03-29T14:32:01.701209+00:00",
+      "updated_at": "2026-03-29T14:32:01.701209+00:00",
+      "search_vector": "'detail':2C,4C,6C,8A,10C 'individu':11B 'item':13B 'line':12B 'order':1C,3C,5C,7A,9C,16B 'within':14B"
+    },
+    "type": "object",
+    "properties": {
       "id": {
-        "name": "id",
+        "type": "integer",
+        "ctype": "id",
         "title": "Id",
-        "type": "number",
-        "column": "order_details.id",
-        "primaryKey": true
+        "width": "default",
+        "is_core": true,
+        "inputMode": "readonly",
+        "searchable": false,
+        "description": "",
+        "field_order": 1
       },
       "label": {
-        "name": "label",
-        "title": "Order Detail",
         "type": "string",
-        "column": "order_details.label"
+        "ctype": "label",
+        "title": "Order Detail",
+        "width": "default",
+        "default": "",
+        "is_core": true,
+        "inputMode": "required",
+        "searchable": true,
+        "description": "",
+        "field_order": 1
       },
       "order_id": {
-        "name": "order_id",
+        "type": "integer",
         "title": "Order",
-        "type": "number",
-        "column": "order_details.order_id"
+        "width": "default",
+        "format": "parent",
+        "is_core": false,
+        "inputMode": "required",
+        "searchable": false,
+        "description": "Reference to the order",
+        "field_order": 10,
+        "reference_table": "orders",
+        "reference_delete_mode": "restrict",
+        "reference_table_id_column": "id",
+        "reference_table_label_column": "ship_name",
+        "reference_table_plural_label": "Orders",
+        "reference_table_singular_label": "Order"
       },
       "product_id": {
-        "name": "product_id",
+        "type": "integer",
         "title": "Product",
-        "type": "number",
-        "column": "order_details.product_id"
+        "width": "default",
+        "format": "parent",
+        "is_core": false,
+        "inputMode": "required",
+        "searchable": false,
+        "description": "Reference to the product",
+        "field_order": 20,
+        "reference_table": "products",
+        "reference_delete_mode": "restrict",
+        "reference_table_id_column": "id",
+        "reference_table_label_column": "product_name",
+        "reference_table_plural_label": "Products",
+        "reference_table_singular_label": "Product"
       },
       "unit_price": {
-        "name": "unit_price",
-        "title": "Unit Price",
         "type": "number",
-        "column": "order_details.unit_price"
+        "title": "Unit Price",
+        "width": "default",
+        "default": 0,
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Actual price per unit charged on this order",
+        "field_order": 30
       },
       "quantity": {
-        "name": "quantity",
+        "type": "integer",
         "title": "Quantity",
-        "type": "number",
-        "column": "order_details.quantity"
+        "width": "default",
+        "default": 0,
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Number of units ordered",
+        "field_order": 40
       },
       "discount": {
-        "name": "discount",
-        "title": "Discount",
         "type": "number",
-        "column": "order_details.discount"
-      }
-    },
-    "measures": {
-      "count": {
-        "name": "count",
-        "title": "Total Order Details",
-        "type": "count",
-        "column": "order_details.id"
-      }
-    },
-    "joins": {
-      "Orders": {
-        "targetCube": "Orders",
-        "relationship": "belongsTo",
-        "on": [
-          {
-            "source": "order_details.order_id",
-            "target": "orders.id"
-          }
-        ]
+        "title": "Discount",
+        "width": "default",
+        "default": 0,
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Discount rate applied to this line item",
+        "field_order": 50
       },
-      "Products": {
-        "targetCube": "Products",
-        "relationship": "belongsTo",
-        "on": [
-          {
-            "source": "order_details.product_id",
-            "target": "products.id"
-          }
-        ]
+      "created_at": {
+        "type": "string",
+        "title": "Created At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999998
+      },
+      "updated_at": {
+        "type": "string",
+        "title": "Updated At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999999
       }
-    }
+    },
+    "required": [],
+    "children": [],
+    "additionalProperties": false
   },
   {
-    "name": "Orders",
-    "title": "Orders",
+    "$schema": "https://semantius.com/meta/sem-schema/v1",
+    "$id": "https://example.com/schemas/orders.schema.json",
+    "title": "Order",
     "description": "Customer orders and shipping details",
-    "tableName": "orders",
-    "dimensions": {
+    "table": {
+      "table_name": "orders",
+      "singular": "order",
+      "plural": "orders",
+      "singular_label": "Order",
+      "plural_label": "Orders",
+      "icon_url": "",
+      "description": "Customer orders and shipping details",
+      "module_id": 1004,
+      "view_permission": "nwind:view",
+      "edit_permission": "nwind:manage",
+      "id_column": "id",
+      "label_column": "ship_name",
+      "managed": true,
+      "searchable": true,
+      "is_child": false,
+      "edit_mode": "auto",
+      "cube_mode": "auto",
+      "created_at": "2026-03-29T14:32:01.701209+00:00",
+      "updated_at": "2026-03-29T14:32:01.701209+00:00",
+      "search_vector": "'custom':6B 'detail':10B 'order':1C,2C,3C,4A,5C,7B 'ship':9B"
+    },
+    "type": "object",
+    "properties": {
       "ship_name": {
-        "name": "ship_name",
-        "title": "Order",
         "type": "string",
-        "column": "orders.ship_name"
+        "ctype": "label",
+        "title": "Order",
+        "width": "default",
+        "default": "",
+        "is_core": true,
+        "inputMode": "required",
+        "searchable": true,
+        "description": "",
+        "field_order": 1
       },
       "id": {
-        "name": "id",
+        "type": "integer",
+        "ctype": "id",
         "title": "Id",
-        "type": "number",
-        "column": "orders.id",
-        "primaryKey": true
+        "width": "default",
+        "is_core": true,
+        "inputMode": "readonly",
+        "searchable": false,
+        "description": "",
+        "field_order": 1
       },
       "customer_id": {
-        "name": "customer_id",
+        "type": "integer",
         "title": "Customer",
-        "type": "number",
-        "column": "orders.customer_id"
+        "width": "default",
+        "format": "reference",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Customer who placed the order",
+        "field_order": 10,
+        "reference_table": "customers",
+        "reference_delete_mode": "restrict",
+        "reference_table_id_column": "id",
+        "reference_table_label_column": "company_name",
+        "reference_table_plural_label": "Customers",
+        "reference_table_singular_label": "Customer"
       },
       "employee_id": {
-        "name": "employee_id",
+        "type": "integer",
         "title": "Employee",
-        "type": "number",
-        "column": "orders.employee_id"
+        "width": "default",
+        "format": "reference",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Employee who handled the order",
+        "field_order": 20,
+        "reference_table": "employees",
+        "reference_delete_mode": "restrict",
+        "reference_table_id_column": "id",
+        "reference_table_label_column": "last_name",
+        "reference_table_plural_label": "Employees",
+        "reference_table_singular_label": "Employee"
       },
       "ship_via": {
-        "name": "ship_via",
+        "type": "integer",
         "title": "Shipped Via",
-        "type": "number",
-        "column": "orders.ship_via"
+        "width": "default",
+        "format": "reference",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Shipper used for this order",
+        "field_order": 30,
+        "reference_table": "shippers",
+        "reference_delete_mode": "restrict",
+        "reference_table_id_column": "id",
+        "reference_table_label_column": "company_name",
+        "reference_table_plural_label": "Shippers",
+        "reference_table_singular_label": "Shipper"
       },
       "ship_address": {
-        "name": "ship_address",
-        "title": "Ship Address",
         "type": "string",
-        "column": "orders.ship_address"
+        "title": "Ship Address",
+        "width": "w",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "",
+        "field_order": 50
       },
       "ship_city": {
-        "name": "ship_city",
-        "title": "Ship City",
         "type": "string",
-        "column": "orders.ship_city"
+        "title": "Ship City",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": true,
+        "description": "",
+        "field_order": 60
       },
       "ship_region": {
-        "name": "ship_region",
-        "title": "Ship Region",
         "type": "string",
-        "column": "orders.ship_region"
+        "title": "Ship Region",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "State or province for shipment",
+        "field_order": 70
       },
       "ship_postal_code": {
-        "name": "ship_postal_code",
-        "title": "Ship Postal Code",
         "type": "string",
-        "column": "orders.ship_postal_code"
+        "title": "Ship Postal Code",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "",
+        "field_order": 80
       },
       "ship_country": {
-        "name": "ship_country",
-        "title": "Ship Country",
         "type": "string",
-        "column": "orders.ship_country"
+        "title": "Ship Country",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": true,
+        "description": "",
+        "field_order": 90
       },
       "freight": {
-        "name": "freight",
-        "title": "Freight",
         "type": "number",
-        "column": "orders.freight"
+        "title": "Freight",
+        "width": "default",
+        "default": 0,
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Freight cost for the order",
+        "field_order": 100
       },
       "order_date": {
-        "name": "order_date",
+        "type": "string",
         "title": "Order Date",
-        "type": "time",
-        "column": "orders.order_date"
+        "width": "default",
+        "format": "date",
+        "default": "CURRENT_DATE",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "",
+        "field_order": 110
       },
       "required_date": {
-        "name": "required_date",
+        "type": "string",
         "title": "Required Date",
-        "type": "time",
-        "column": "orders.required_date"
+        "width": "default",
+        "format": "date",
+        "default": "CURRENT_DATE",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "",
+        "field_order": 120
       },
       "shipped_date": {
-        "name": "shipped_date",
+        "type": "string",
         "title": "Shipped Date",
-        "type": "time",
-        "column": "orders.shipped_date"
+        "width": "default",
+        "format": "date",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "",
+        "field_order": 130
+      },
+      "created_at": {
+        "type": "string",
+        "title": "Created At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999998
+      },
+      "updated_at": {
+        "type": "string",
+        "title": "Updated At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999999
       }
     },
-    "measures": {
-      "count": {
-        "name": "count",
-        "title": "Total Orders",
-        "type": "count",
-        "column": "orders.id"
+    "required": [],
+    "children": [
+      {
+        "id": "order_details.order_id",
+        "title": "Order",
+        "singular_label": "Order Detail",
+        "plural_label": "Order Details",
+        "singular_label_parent": "",
+        "plural_label_parent": "",
+        "id_column": "id",
+        "label_column": "label"
       }
-    },
-    "joins": {
-      "Customers": {
-        "targetCube": "Customers",
-        "relationship": "belongsTo",
-        "on": [
-          {
-            "source": "orders.customer_id",
-            "target": "customers.id"
-          }
-        ]
-      },
-      "Employees": {
-        "targetCube": "Employees",
-        "relationship": "belongsTo",
-        "on": [
-          {
-            "source": "orders.employee_id",
-            "target": "employees.id"
-          }
-        ]
-      },
-      "Shippers": {
-        "targetCube": "Shippers",
-        "relationship": "belongsTo",
-        "on": [
-          {
-            "source": "orders.ship_via",
-            "target": "shippers.id"
-          }
-        ]
-      },
-      "OrderDetails": {
-        "targetCube": "OrderDetails",
-        "relationship": "hasMany",
-        "on": [
-          {
-            "source": "orders.id",
-            "target": "order_details.order_id"
-          }
-        ]
-      }
-    }
+    ],
+    "additionalProperties": false
   },
   {
-    "name": "Products",
-    "title": "Products",
+    "$schema": "https://semantius.com/meta/sem-schema/v1",
+    "$id": "https://example.com/schemas/products.schema.json",
+    "title": "Product",
     "description": "Product catalog and inventory",
-    "tableName": "products",
-    "dimensions": {
+    "table": {
+      "table_name": "products",
+      "singular": "product",
+      "plural": "products",
+      "singular_label": "Product",
+      "plural_label": "Products",
+      "icon_url": "",
+      "description": "Product catalog and inventory",
+      "module_id": 1004,
+      "view_permission": "nwind:view",
+      "edit_permission": "nwind:manage",
+      "id_column": "id",
+      "label_column": "product_name",
+      "managed": true,
+      "searchable": true,
+      "is_child": false,
+      "edit_mode": "auto",
+      "cube_mode": "auto",
+      "created_at": "2026-03-29T14:32:01.701209+00:00",
+      "updated_at": "2026-03-29T14:32:01.701209+00:00",
+      "search_vector": "'catalog':7B 'inventori':9B 'product':1C,2C,3C,4A,5C,6B"
+    },
+    "type": "object",
+    "properties": {
       "product_name": {
-        "name": "product_name",
-        "title": "Product",
         "type": "string",
-        "column": "products.product_name"
+        "ctype": "label",
+        "title": "Product",
+        "width": "default",
+        "default": "",
+        "is_core": true,
+        "inputMode": "required",
+        "searchable": true,
+        "description": "",
+        "field_order": 1
       },
       "id": {
-        "name": "id",
+        "type": "integer",
+        "ctype": "id",
         "title": "Id",
-        "type": "number",
-        "column": "products.id",
-        "primaryKey": true
+        "width": "default",
+        "is_core": true,
+        "inputMode": "readonly",
+        "searchable": false,
+        "description": "",
+        "field_order": 1
       },
       "supplier_id": {
-        "name": "supplier_id",
+        "type": "integer",
         "title": "Supplier",
-        "type": "number",
-        "column": "products.supplier_id"
+        "width": "default",
+        "format": "reference",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Supplier providing this product",
+        "field_order": 20,
+        "reference_table": "suppliers",
+        "reference_delete_mode": "restrict",
+        "reference_table_id_column": "id",
+        "reference_table_label_column": "company_name",
+        "reference_table_plural_label": "Suppliers",
+        "reference_table_singular_label": "Supplier"
       },
       "category_id": {
-        "name": "category_id",
+        "type": "integer",
         "title": "Category",
-        "type": "number",
-        "column": "products.category_id"
+        "width": "default",
+        "format": "reference",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Category this product belongs to",
+        "field_order": 30,
+        "reference_table": "categories",
+        "reference_delete_mode": "restrict",
+        "reference_table_id_column": "id",
+        "reference_table_label_column": "category_name",
+        "reference_table_plural_label": "Categories",
+        "reference_table_singular_label": "Category"
       },
       "quantity_per_unit": {
-        "name": "quantity_per_unit",
-        "title": "Quantity Per Unit",
         "type": "string",
-        "column": "products.quantity_per_unit"
+        "title": "Quantity Per Unit",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Quantity and unit of measure per package",
+        "field_order": 40
       },
       "unit_price": {
-        "name": "unit_price",
-        "title": "Unit Price",
         "type": "number",
-        "column": "products.unit_price"
+        "title": "Unit Price",
+        "width": "default",
+        "default": 0,
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "",
+        "field_order": 50
       },
       "units_in_stock": {
-        "name": "units_in_stock",
+        "type": "integer",
         "title": "Units In Stock",
-        "type": "number",
-        "column": "products.units_in_stock"
+        "width": "default",
+        "default": 0,
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Current stock quantity",
+        "field_order": 60
       },
       "units_on_order": {
-        "name": "units_on_order",
+        "type": "integer",
         "title": "Units On Order",
-        "type": "number",
-        "column": "products.units_on_order"
+        "width": "default",
+        "default": 0,
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Quantity currently on order from supplier",
+        "field_order": 70
       },
       "reorder_level": {
-        "name": "reorder_level",
+        "type": "integer",
         "title": "Reorder Level",
-        "type": "number",
-        "column": "products.reorder_level"
+        "width": "default",
+        "default": 0,
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Minimum stock level before reordering",
+        "field_order": 80
       },
       "discontinued": {
-        "name": "discontinued",
+        "type": "boolean",
         "title": "Discontinued",
-        "type": "number",
-        "column": "products.discontinued"
+        "width": "default",
+        "default": false,
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Whether the product is discontinued",
+        "field_order": 90
+      },
+      "created_at": {
+        "type": "string",
+        "title": "Created At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999998
+      },
+      "updated_at": {
+        "type": "string",
+        "title": "Updated At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999999
       }
     },
-    "measures": {
-      "count": {
-        "name": "count",
-        "title": "Total Products",
-        "type": "count",
-        "column": "products.id"
+    "required": [],
+    "children": [
+      {
+        "id": "order_details.product_id",
+        "title": "Product",
+        "singular_label": "Order Detail",
+        "plural_label": "Order Details",
+        "singular_label_parent": "",
+        "plural_label_parent": "",
+        "id_column": "id",
+        "label_column": "label"
       }
-    },
-    "joins": {
-      "Suppliers": {
-        "targetCube": "Suppliers",
-        "relationship": "belongsTo",
-        "on": [
-          {
-            "source": "products.supplier_id",
-            "target": "suppliers.id"
-          }
-        ]
-      },
-      "Categories": {
-        "targetCube": "Categories",
-        "relationship": "belongsTo",
-        "on": [
-          {
-            "source": "products.category_id",
-            "target": "categories.id"
-          }
-        ]
-      },
-      "OrderDetails": {
-        "targetCube": "OrderDetails",
-        "relationship": "hasMany",
-        "on": [
-          {
-            "source": "products.id",
-            "target": "order_details.product_id"
-          }
-        ]
-      }
-    }
+    ],
+    "additionalProperties": false
   },
   {
-    "name": "Regions",
-    "title": "Regions",
+    "$schema": "https://semantius.com/meta/sem-schema/v1",
+    "$id": "https://example.com/schemas/regions.schema.json",
+    "title": "Region",
     "description": "Sales territories and geographic regions",
-    "tableName": "regions",
-    "dimensions": {
+    "table": {
+      "table_name": "regions",
+      "singular": "region",
+      "plural": "regions",
+      "singular_label": "Region",
+      "plural_label": "Regions",
+      "icon_url": "",
+      "description": "Sales territories and geographic regions",
+      "module_id": 1004,
+      "view_permission": "nwind:view",
+      "edit_permission": "nwind:manage",
+      "id_column": "id",
+      "label_column": "region_description",
+      "managed": true,
+      "searchable": true,
+      "is_child": false,
+      "edit_mode": "auto",
+      "cube_mode": "auto",
+      "created_at": "2026-03-29T14:32:01.701209+00:00",
+      "updated_at": "2026-03-29T14:32:01.701209+00:00",
+      "search_vector": "'geograph':9B 'region':1C,2C,3C,4A,5C,10B 'sale':6B 'territori':7B"
+    },
+    "type": "object",
+    "properties": {
       "id": {
-        "name": "id",
+        "type": "integer",
+        "ctype": "id",
         "title": "Id",
-        "type": "number",
-        "column": "regions.id",
-        "primaryKey": true
+        "width": "default",
+        "is_core": true,
+        "inputMode": "readonly",
+        "searchable": false,
+        "description": "",
+        "field_order": 1
       },
       "region_description": {
-        "name": "region_description",
-        "title": "Region",
         "type": "string",
-        "column": "regions.region_description"
+        "ctype": "label",
+        "title": "Region",
+        "width": "default",
+        "default": "",
+        "is_core": true,
+        "inputMode": "required",
+        "searchable": true,
+        "description": "",
+        "field_order": 1
+      },
+      "created_at": {
+        "type": "string",
+        "title": "Created At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999998
+      },
+      "updated_at": {
+        "type": "string",
+        "title": "Updated At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999999
       }
     },
-    "measures": {
-      "count": {
-        "name": "count",
-        "title": "Total Regions",
-        "type": "count",
-        "column": "regions.id"
-      }
-    }
+    "required": [],
+    "children": [],
+    "additionalProperties": false
   },
   {
-    "name": "Shippers",
-    "title": "Shippers",
+    "$schema": "https://semantius.com/meta/sem-schema/v1",
+    "$id": "https://example.com/schemas/shippers.schema.json",
+    "title": "Shipper",
     "description": "Shipping companies and carriers",
-    "tableName": "shippers",
-    "dimensions": {
+    "table": {
+      "table_name": "shippers",
+      "singular": "shipper",
+      "plural": "shippers",
+      "singular_label": "Shipper",
+      "plural_label": "Shippers",
+      "icon_url": "",
+      "description": "Shipping companies and carriers",
+      "module_id": 1004,
+      "view_permission": "nwind:view",
+      "edit_permission": "nwind:manage",
+      "id_column": "id",
+      "label_column": "company_name",
+      "managed": true,
+      "searchable": true,
+      "is_child": false,
+      "edit_mode": "auto",
+      "cube_mode": "auto",
+      "created_at": "2026-03-29T14:32:01.701209+00:00",
+      "updated_at": "2026-03-29T14:32:01.701209+00:00",
+      "search_vector": "'carrier':9B 'compani':7B 'ship':6B 'shipper':1C,2C,3C,4A,5C"
+    },
+    "type": "object",
+    "properties": {
       "id": {
-        "name": "id",
+        "type": "integer",
+        "ctype": "id",
         "title": "Id",
-        "type": "number",
-        "column": "shippers.id",
-        "primaryKey": true
+        "width": "default",
+        "is_core": true,
+        "inputMode": "readonly",
+        "searchable": false,
+        "description": "",
+        "field_order": 1
       },
       "company_name": {
-        "name": "company_name",
-        "title": "Shipper",
         "type": "string",
-        "column": "shippers.company_name"
+        "ctype": "label",
+        "title": "Shipper",
+        "width": "default",
+        "default": "",
+        "is_core": true,
+        "inputMode": "required",
+        "searchable": true,
+        "description": "",
+        "field_order": 1
       },
       "phone": {
-        "name": "phone",
-        "title": "Phone",
         "type": "string",
-        "column": "shippers.phone"
+        "title": "Phone",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "",
+        "field_order": 20
+      },
+      "created_at": {
+        "type": "string",
+        "title": "Created At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999998
+      },
+      "updated_at": {
+        "type": "string",
+        "title": "Updated At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999999
       }
     },
-    "measures": {
-      "count": {
-        "name": "count",
-        "title": "Total Shippers",
-        "type": "count",
-        "column": "shippers.id"
-      }
-    }
+    "required": [],
+    "children": [],
+    "additionalProperties": false
   },
   {
-    "name": "Suppliers",
-    "title": "Suppliers",
+    "$schema": "https://semantius.com/meta/sem-schema/v1",
+    "$id": "https://example.com/schemas/suppliers.schema.json",
+    "title": "Supplier",
     "description": "Supplier information and contact details",
-    "tableName": "suppliers",
-    "dimensions": {
+    "table": {
+      "table_name": "suppliers",
+      "singular": "supplier",
+      "plural": "suppliers",
+      "singular_label": "Supplier",
+      "plural_label": "Suppliers",
+      "icon_url": "",
+      "description": "Supplier information and contact details",
+      "module_id": 1004,
+      "view_permission": "nwind:view",
+      "edit_permission": "nwind:manage",
+      "id_column": "id",
+      "label_column": "company_name",
+      "managed": true,
+      "searchable": true,
+      "is_child": false,
+      "edit_mode": "auto",
+      "cube_mode": "auto",
+      "created_at": "2026-03-29T14:32:01.701209+00:00",
+      "updated_at": "2026-03-29T14:32:01.701209+00:00",
+      "search_vector": "'contact':9B 'detail':10B 'inform':7B 'supplier':1C,2C,3C,4A,5C,6B"
+    },
+    "type": "object",
+    "properties": {
       "company_name": {
-        "name": "company_name",
-        "title": "Supplier",
         "type": "string",
-        "column": "suppliers.company_name"
+        "ctype": "label",
+        "title": "Supplier",
+        "width": "default",
+        "default": "",
+        "is_core": true,
+        "inputMode": "required",
+        "searchable": true,
+        "description": "",
+        "field_order": 1
       },
       "id": {
-        "name": "id",
+        "type": "integer",
+        "ctype": "id",
         "title": "Id",
-        "type": "number",
-        "column": "suppliers.id",
-        "primaryKey": true
+        "width": "default",
+        "is_core": true,
+        "inputMode": "readonly",
+        "searchable": false,
+        "description": "",
+        "field_order": 1
       },
       "contact_name": {
-        "name": "contact_name",
-        "title": "Contact Name",
         "type": "string",
-        "column": "suppliers.contact_name"
+        "title": "Contact Name",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": true,
+        "description": "",
+        "field_order": 20
       },
       "contact_title": {
-        "name": "contact_title",
-        "title": "Contact Title",
         "type": "string",
-        "column": "suppliers.contact_title"
+        "title": "Contact Title",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Job title of the primary contact",
+        "field_order": 30
       },
       "address": {
-        "name": "address",
-        "title": "Street Address",
         "type": "string",
-        "column": "suppliers.address"
+        "title": "Street Address",
+        "width": "w",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "",
+        "field_order": 40
       },
       "city": {
-        "name": "city",
-        "title": "City",
         "type": "string",
-        "column": "suppliers.city"
+        "title": "City",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": true,
+        "description": "",
+        "field_order": 50
       },
       "region": {
-        "name": "region",
-        "title": "Region",
         "type": "string",
-        "column": "suppliers.region"
+        "title": "Region",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "State or province",
+        "field_order": 60
       },
       "postal_code": {
-        "name": "postal_code",
-        "title": "Postal Code",
         "type": "string",
-        "column": "suppliers.postal_code"
+        "title": "Postal Code",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Postal or ZIP code",
+        "field_order": 70
       },
       "country": {
-        "name": "country",
-        "title": "Country",
         "type": "string",
-        "column": "suppliers.country"
+        "title": "Country",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": true,
+        "description": "",
+        "field_order": 80
       },
       "phone": {
-        "name": "phone",
-        "title": "Phone",
         "type": "string",
-        "column": "suppliers.phone"
+        "title": "Phone",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Primary phone number",
+        "field_order": 90
       },
       "fax": {
-        "name": "fax",
-        "title": "Fax",
         "type": "string",
-        "column": "suppliers.fax"
+        "title": "Fax",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "",
+        "field_order": 100
       },
       "homepage": {
-        "name": "homepage",
-        "title": "Homepage",
         "type": "string",
-        "column": "suppliers.homepage"
+        "title": "Homepage",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Supplier website URL",
+        "field_order": 110
+      },
+      "created_at": {
+        "type": "string",
+        "title": "Created At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999998
+      },
+      "updated_at": {
+        "type": "string",
+        "title": "Updated At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999999
       }
     },
-    "measures": {
-      "count": {
-        "name": "count",
-        "title": "Total Suppliers",
-        "type": "count",
-        "column": "suppliers.id"
-      }
-    }
+    "required": [],
+    "children": [],
+    "additionalProperties": false
   },
   {
-    "name": "Territories",
-    "title": "Territories",
+    "$schema": "https://semantius.com/meta/sem-schema/v1",
+    "$id": "https://example.com/schemas/territories.schema.json",
+    "title": "Territory",
     "description": "Sales territories within regions",
-    "tableName": "territories",
-    "dimensions": {
+    "table": {
+      "table_name": "territories",
+      "singular": "territory",
+      "plural": "territories",
+      "singular_label": "Territory",
+      "plural_label": "Territories",
+      "icon_url": "",
+      "description": "Sales territories within regions",
+      "module_id": 1004,
+      "view_permission": "nwind:view",
+      "edit_permission": "nwind:manage",
+      "id_column": "id",
+      "label_column": "territory_description",
+      "managed": true,
+      "searchable": true,
+      "is_child": false,
+      "edit_mode": "auto",
+      "cube_mode": "auto",
+      "created_at": "2026-03-29T14:32:01.701209+00:00",
+      "updated_at": "2026-03-29T14:32:01.701209+00:00",
+      "search_vector": "'region':9B 'sale':6B 'territori':1C,2C,3C,4A,5C,7B 'within':8B"
+    },
+    "type": "object",
+    "properties": {
       "id": {
-        "name": "id",
+        "type": "integer",
+        "ctype": "id",
         "title": "Id",
-        "type": "number",
-        "column": "territories.id",
-        "primaryKey": true
+        "width": "default",
+        "is_core": true,
+        "inputMode": "readonly",
+        "searchable": false,
+        "description": "",
+        "field_order": 1
       },
       "territory_description": {
-        "name": "territory_description",
-        "title": "Territory",
         "type": "string",
-        "column": "territories.territory_description"
+        "ctype": "label",
+        "title": "Territory",
+        "width": "default",
+        "default": "",
+        "is_core": true,
+        "inputMode": "required",
+        "searchable": true,
+        "description": "",
+        "field_order": 1
       },
       "territory_id": {
-        "name": "territory_id",
-        "title": "Territory ID",
         "type": "string",
-        "column": "territories.territory_id"
+        "title": "Territory ID",
+        "width": "default",
+        "default": "",
+        "is_core": false,
+        "inputMode": "required",
+        "searchable": true,
+        "description": "Unique code identifying the territory",
+        "field_order": 10
       },
       "region_id": {
-        "name": "region_id",
+        "type": "integer",
         "title": "Region",
-        "type": "number",
-        "column": "territories.region_id"
+        "width": "default",
+        "format": "reference",
+        "is_core": false,
+        "inputMode": "default",
+        "searchable": false,
+        "description": "Region this territory belongs to",
+        "field_order": 30,
+        "reference_table": "regions",
+        "reference_delete_mode": "restrict",
+        "reference_table_id_column": "id",
+        "reference_table_label_column": "region_description",
+        "reference_table_plural_label": "Regions",
+        "reference_table_singular_label": "Region"
+      },
+      "created_at": {
+        "type": "string",
+        "title": "Created At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999998
+      },
+      "updated_at": {
+        "type": "string",
+        "title": "Updated At",
+        "width": "default",
+        "format": "date-time",
+        "default": "",
+        "is_core": true,
+        "inputMode": "disabled",
+        "searchable": false,
+        "description": "",
+        "field_order": 999999
       }
     },
-    "measures": {
-      "count": {
-        "name": "count",
-        "title": "Total Territories",
-        "type": "count",
-        "column": "territories.id"
+    "required": [],
+    "children": [
+      {
+        "id": "employee_territories.territory_id",
+        "title": "Territory",
+        "singular_label": "Employee Territory",
+        "plural_label": "Employee Territories",
+        "singular_label_parent": "",
+        "plural_label_parent": "",
+        "id_column": "id",
+        "label_column": "label"
       }
-    },
-    "joins": {
-      "Regions": {
-        "targetCube": "Regions",
-        "relationship": "belongsTo",
-        "on": [
-          {
-            "source": "territories.region_id",
-            "target": "regions.id"
-          }
-        ]
-      },
-      "EmployeeTerritories": {
-        "targetCube": "EmployeeTerritories",
-        "relationship": "hasMany",
-        "on": [
-          {
-            "source": "territories.id",
-            "target": "employee_territories.territory_id"
-          }
-        ]
-      }
-    }
-  },
-  {
-    "name": "UsStates",
-    "title": "US States",
-    "description": "United States state reference data",
-    "tableName": "us_states",
-    "dimensions": {
-      "id": {
-        "name": "id",
-        "title": "Id",
-        "type": "number",
-        "column": "us_states.id",
-        "primaryKey": true
-      },
-      "state_name": {
-        "name": "state_name",
-        "title": "US State",
-        "type": "string",
-        "column": "us_states.state_name"
-      },
-      "state_abbr": {
-        "name": "state_abbr",
-        "title": "State Abbreviation",
-        "type": "string",
-        "column": "us_states.state_abbr"
-      },
-      "state_region": {
-        "name": "state_region",
-        "title": "State Region",
-        "type": "string",
-        "column": "us_states.state_region"
-      }
-    },
-    "measures": {
-      "count": {
-        "name": "count",
-        "title": "Total US States",
-        "type": "count",
-        "column": "us_states.id"
-      }
-    }
+    ],
+    "additionalProperties": false
   }
 ]

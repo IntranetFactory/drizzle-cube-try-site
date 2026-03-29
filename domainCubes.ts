@@ -44,10 +44,21 @@ function domainCubesToEntityCubes(domainCubes: any[]): EntityCube[] {
     const dimensions: Record<string, EntityDimension> = {}
     const measures: Record<string, EntityMeasure> = {}
     const joins: Record<string, EntityCubeJoin> = {}
+    let countMeasure = false
+    const amountFields: { fieldName: string; title: string }[] = []
 
     for (const [fieldName, prop] of Object.entries(properties) as [string, any][]) {
       // Skip system timestamp fields
       if (prop.inputMode === 'disabled') continue
+
+      // Measure flags per field
+      if (prop.cube_type === 'auto' && prop.ctype === 'id') countMeasure = true
+      if (prop.cube_type === 'measure' && prop.format === 'string') countMeasure = true
+
+      let amountMeasure = false
+      if (prop.cube_type === 'auto' && prop.type === 'number') amountMeasure = true
+      if (prop.cube_type === 'measure' && prop.type === 'integer') amountMeasure = true
+      if (amountMeasure) amountFields.push({ fieldName, title: prop.title || fieldName })
 
       // Reference fields → belongsTo join + FK dimension
       if (prop.format === 'reference' || prop.format === 'parent') {
@@ -82,14 +93,31 @@ function domainCubesToEntityCubes(domainCubes: any[]): EntityCube[] {
       }
     }
 
-    // Always add a count measure on the id column
-    const idField = Object.entries(properties).find(([_, p]: [string, any]) => p.ctype === 'id')
-    if (idField) {
+    // Add measures based on flags
+    const label = dc.table.plural_label || cubeName
+    if (countMeasure) {
       measures.count = {
         name: 'count',
-        title: `Total ${dc.table.plural_label || cubeName}`,
+        title: `${label} Count`,
         type: 'count',
-        column: `${tableName}.${idField[0]}`
+        column: `${tableName}.id`
+      }
+    }
+
+    for (const { fieldName, title } of amountFields) {
+      const pascal = toPascalCase(fieldName)
+      const col = `${tableName}.${fieldName}`
+      measures[`total${pascal}`] = {
+        name: `total${pascal}`, title: `Total ${title}`, type: 'sum', column: col
+      }
+      measures[`avg${pascal}`] = {
+        name: `avg${pascal}`, title: `Average ${title}`, type: 'avg', column: col
+      }
+      measures[`median${pascal}`] = {
+        name: `median${pascal}`, title: `Median ${title}`, type: 'median', column: col
+      }
+      measures[`stddev${pascal}`] = {
+        name: `stddev${pascal}`, title: `${title} Std Dev`, type: 'stddev', column: col
       }
     }
 
