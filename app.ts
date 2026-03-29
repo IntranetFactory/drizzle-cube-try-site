@@ -12,7 +12,9 @@ import postgres from 'postgres'
 import { Pool } from '@neondatabase/serverless'
 import { createCubeApp } from 'drizzle-cube/adapters/hono'
 import type { SecurityContext, DrizzleDatabase } from 'drizzle-cube/server'
-import { buildCubes } from './cubes'
+import { buildDrizzleCubes } from './drizzleCubes'
+import { writeFileSync } from 'fs'
+import { buildDomainCubes } from './domainCubes'
 import * as drizzleSchema from './drizzle_schema'
 import analyticsApp from './src/analytics-routes'
 import notebooksApp from './src/notebooks-routes'
@@ -211,7 +213,7 @@ app.get('/health', (c) => {
 app.get('/api/docs', (c) => {
   // Get metadata from the cube app (we could also create a temporary semantic layer for this)
   // For now, we'll provide static documentation. In a real app, you might extract this from the cubes
-  const { allCubes } = buildCubes()
+  const { allCubes } = buildDrizzleCubes() // TODO remove drizzle cubes
   const metadata = allCubes.map(cube => ({
     name: cube.name,
     title: cube.title || cube.name,
@@ -288,8 +290,9 @@ app.all('/:domain/cubejs-api/*', async (c) => {
     }
   }
 
-  // buildCubes reads domain_cubes from context and derives everything
-  const { schema, allCubes, cubeSchemaJSON } = buildCubes(c)
+  // Build cubes from domain_cubes (semantic model)
+  const domainCubeData: any[] | undefined = c.get('domain_cubes')
+  const { schema, allCubes, cubeSchemaJSON } = buildDomainCubes(domainCubeData);    
 
   // Expose cubeSchemaJSON as module_cubes for downstream consumers
   c.set('module_cubes', cubeSchemaJSON)
@@ -334,7 +337,21 @@ app.all('/:domain/cubejs-api/*', async (c) => {
   const url = new URL(c.req.url)
   url.pathname = url.pathname.replace(`/${domain}/cubejs-api`, '')
   const rewrittenRequest = new Request(url.toString(), c.req.raw)
-  return cubeApp.fetch(rewrittenRequest, c.env)
+  const response = await cubeApp.fetch(rewrittenRequest, c.env)
+
+  // Save /meta response for debugging
+  if (false && url.pathname === '/v1/meta' && response.ok) {
+    try {
+      const cloned = response.clone()
+      const body = await cloned.json()
+      writeFileSync('meta.json', JSON.stringify(body, null, 2))
+      console.log('[meta] saved meta.json')
+    } catch (e) {
+      console.error('[meta] failed to save meta.json:', e)
+    }
+  }
+
+  return response
 })
 
 // Mount analytics pages API with database and PDF export configuration

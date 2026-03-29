@@ -13,7 +13,7 @@ import { neon, neonConfig } from '@neondatabase/serverless'
 import { createCubeApp } from 'drizzle-cube/adapters/hono'
 import type { SecurityContext, DrizzleDatabase, CacheConfig } from 'drizzle-cube/server'
 import { CloudflareKVProvider } from './cache/cloudflare-kv-provider'
-import { buildCubes } from '../cubes.js'
+import { buildDrizzleCubes } from '../drizzleCubes.js'
 import analyticsApp from './analytics-routes'
 import notebooksApp from './notebooks-routes'
 import aiApp from './ai-routes'
@@ -150,7 +150,7 @@ const createCubeApiApp = (db: DrizzleDatabase, cacheKV?: KVNamespace) => {
     }
   } : undefined
 
-  const { schema, allCubes } = buildCubes()
+  const { schema, allCubes } = buildDrizzleCubes() // TODO remove drizzle cubes
 
   return createCubeApp({
     cubes: allCubes,

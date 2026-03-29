@@ -12,7 +12,8 @@
       "Bash(powershell -Command \"Remove-Item ''C:\\\\dev\\\\oauth-hono-mcp\\\\packages\\\\server\\\\src\\\\index.ts.new''\")",
       "Bash(git -C \"C:/dev/oauth-hono-mcp\" checkout -- packages/server/src/index.ts)",
       "Bash(find node_modules/drizzle-cube -name hono*)",
-      "Bash(curl -s http://localhost:3458/nwind/cubejs-api/v1/meta)"
+      "Bash(curl -s http://localhost:3458/nwind/cubejs-api/v1/meta)",
+      "Bash(ls -la /c/dev/drizzle-cube-try-site/*.ts /c/dev/drizzle-cube-try-site/*.js)"
     ],
     "additionalDirectories": [
       "C:\\dev\\oauth-hono-mcp\\packages\\server\\src"

@@ -1,0 +1,920 @@
+[
+  {
+    "name": "Categories",
+    "title": "Categories",
+    "description": "Product categories",
+    "tableName": "categories",
+    "dimensions": {
+      "id": {
+        "name": "id",
+        "title": "Id",
+        "type": "number",
+        "column": "categories.id",
+        "primaryKey": true
+      },
+      "category_name": {
+        "name": "category_name",
+        "title": "Category",
+        "type": "string",
+        "column": "categories.category_name"
+      },
+      "description": {
+        "name": "description",
+        "title": "Description",
+        "type": "string",
+        "column": "categories.description"
+      }
+    },
+    "measures": {
+      "count": {
+        "name": "count",
+        "title": "Total Categories",
+        "type": "count",
+        "column": "categories.id"
+      }
+    }
+  },
+  {
+    "name": "Customers",
+    "title": "Customers",
+    "description": "Customer information and contact details",
+    "tableName": "customers",
+    "dimensions": {
+      "company_name": {
+        "name": "company_name",
+        "title": "Customer",
+        "type": "string",
+        "column": "customers.company_name"
+      },
+      "id": {
+        "name": "id",
+        "title": "Id",
+        "type": "number",
+        "column": "customers.id",
+        "primaryKey": true
+      },
+      "customer_id": {
+        "name": "customer_id",
+        "title": "Customer ID",
+        "type": "string",
+        "column": "customers.customer_id"
+      },
+      "contact_name": {
+        "name": "contact_name",
+        "title": "Contact Name",
+        "type": "string",
+        "column": "customers.contact_name"
+      },
+      "contact_title": {
+        "name": "contact_title",
+        "title": "Contact Title",
+        "type": "string",
+        "column": "customers.contact_title"
+      },
+      "address": {
+        "name": "address",
+        "title": "Street Address",
+        "type": "string",
+        "column": "customers.address"
+      },
+      "city": {
+        "name": "city",
+        "title": "City",
+        "type": "string",
+        "column": "customers.city"
+      },
+      "region": {
+        "name": "region",
+        "title": "Region",
+        "type": "string",
+        "column": "customers.region"
+      },
+      "postal_code": {
+        "name": "postal_code",
+        "title": "Postal Code",
+        "type": "string",
+        "column": "customers.postal_code"
+      },
+      "country": {
+        "name": "country",
+        "title": "Country",
+        "type": "string",
+        "column": "customers.country"
+      },
+      "phone": {
+        "name": "phone",
+        "title": "Phone",
+        "type": "string",
+        "column": "customers.phone"
+      },
+      "fax": {
+        "name": "fax",
+        "title": "Fax",
+        "type": "string",
+        "column": "customers.fax"
+      }
+    },
+    "measures": {
+      "count": {
+        "name": "count",
+        "title": "Total Customers",
+        "type": "count",
+        "column": "customers.id"
+      }
+    }
+  },
+  {
+    "name": "EmployeeTerritories",
+    "title": "Employee Territories",
+    "description": "Links employees to their assigned territories",
+    "tableName": "employee_territories",
+    "dimensions": {
+      "id": {
+        "name": "id",
+        "title": "Id",
+        "type": "number",
+        "column": "employee_territories.id",
+        "primaryKey": true
+      },
+      "label": {
+        "name": "label",
+        "title": "Employee Territory",
+        "type": "string",
+        "column": "employee_territories.label"
+      },
+      "employee_id": {
+        "name": "employee_id",
+        "title": "Employee",
+        "type": "number",
+        "column": "employee_territories.employee_id"
+      },
+      "territory_id": {
+        "name": "territory_id",
+        "title": "Territory",
+        "type": "number",
+        "column": "employee_territories.territory_id"
+      }
+    },
+    "measures": {
+      "count": {
+        "name": "count",
+        "title": "Total Employee Territories",
+        "type": "count",
+        "column": "employee_territories.id"
+      }
+    },
+    "joins": {
+      "Employees": {
+        "targetCube": "Employees",
+        "relationship": "belongsTo",
+        "on": [
+          {
+            "source": "employee_territories.employee_id",
+            "target": "employees.id"
+          }
+        ]
+      },
+      "Territories": {
+        "targetCube": "Territories",
+        "relationship": "belongsTo",
+        "on": [
+          {
+            "source": "employee_territories.territory_id",
+            "target": "territories.id"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "Employees",
+    "title": "Employees",
+    "description": "Employee records and contact information",
+    "tableName": "employees",
+    "dimensions": {
+      "id": {
+        "name": "id",
+        "title": "Id",
+        "type": "number",
+        "column": "employees.id",
+        "primaryKey": true
+      },
+      "last_name": {
+        "name": "last_name",
+        "title": "Employee",
+        "type": "string",
+        "column": "employees.last_name"
+      },
+      "first_name": {
+        "name": "first_name",
+        "title": "First Name",
+        "type": "string",
+        "column": "employees.first_name"
+      },
+      "title": {
+        "name": "title",
+        "title": "Title",
+        "type": "string",
+        "column": "employees.title"
+      },
+      "title_of_courtesy": {
+        "name": "title_of_courtesy",
+        "title": "Title of Courtesy",
+        "type": "string",
+        "column": "employees.title_of_courtesy"
+      },
+      "birth_date": {
+        "name": "birth_date",
+        "title": "Birth Date",
+        "type": "time",
+        "column": "employees.birth_date"
+      },
+      "hire_date": {
+        "name": "hire_date",
+        "title": "Hire Date",
+        "type": "time",
+        "column": "employees.hire_date"
+      },
+      "address": {
+        "name": "address",
+        "title": "Street Address",
+        "type": "string",
+        "column": "employees.address"
+      },
+      "city": {
+        "name": "city",
+        "title": "City",
+        "type": "string",
+        "column": "employees.city"
+      },
+      "region": {
+        "name": "region",
+        "title": "Region",
+        "type": "string",
+        "column": "employees.region"
+      },
+      "postal_code": {
+        "name": "postal_code",
+        "title": "Postal Code",
+        "type": "string",
+        "column": "employees.postal_code"
+      },
+      "country": {
+        "name": "country",
+        "title": "Country",
+        "type": "string",
+        "column": "employees.country"
+      },
+      "home_phone": {
+        "name": "home_phone",
+        "title": "Home Phone",
+        "type": "string",
+        "column": "employees.home_phone"
+      },
+      "extension": {
+        "name": "extension",
+        "title": "Extension",
+        "type": "string",
+        "column": "employees.extension"
+      },
+      "notes": {
+        "name": "notes",
+        "title": "Notes",
+        "type": "string",
+        "column": "employees.notes"
+      },
+      "photo_path": {
+        "name": "photo_path",
+        "title": "Photo Path",
+        "type": "string",
+        "column": "employees.photo_path"
+      },
+      "reports_to": {
+        "name": "reports_to",
+        "title": "Reports To",
+        "type": "number",
+        "column": "employees.reports_to"
+      }
+    },
+    "measures": {
+      "count": {
+        "name": "count",
+        "title": "Total Employees",
+        "type": "count",
+        "column": "employees.id"
+      }
+    },
+    "joins": {
+      "Employees": {
+        "targetCube": "Employees",
+        "relationship": "belongsTo",
+        "on": [
+          {
+            "source": "employees.reports_to",
+            "target": "employees.id"
+          }
+        ]
+      },
+      "EmployeeTerritories": {
+        "targetCube": "EmployeeTerritories",
+        "relationship": "hasMany",
+        "on": [
+          {
+            "source": "employees.id",
+            "target": "employee_territories.employee_id"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "OrderDetails",
+    "title": "Order Details",
+    "description": "Individual line items within an order",
+    "tableName": "order_details",
+    "dimensions": {
+      "id": {
+        "name": "id",
+        "title": "Id",
+        "type": "number",
+        "column": "order_details.id",
+        "primaryKey": true
+      },
+      "label": {
+        "name": "label",
+        "title": "Order Detail",
+        "type": "string",
+        "column": "order_details.label"
+      },
+      "order_id": {
+        "name": "order_id",
+        "title": "Order",
+        "type": "number",
+        "column": "order_details.order_id"
+      },
+      "product_id": {
+        "name": "product_id",
+        "title": "Product",
+        "type": "number",
+        "column": "order_details.product_id"
+      },
+      "unit_price": {
+        "name": "unit_price",
+        "title": "Unit Price",
+        "type": "number",
+        "column": "order_details.unit_price"
+      },
+      "quantity": {
+        "name": "quantity",
+        "title": "Quantity",
+        "type": "number",
+        "column": "order_details.quantity"
+      },
+      "discount": {
+        "name": "discount",
+        "title": "Discount",
+        "type": "number",
+        "column": "order_details.discount"
+      }
+    },
+    "measures": {
+      "count": {
+        "name": "count",
+        "title": "Total Order Details",
+        "type": "count",
+        "column": "order_details.id"
+      }
+    },
+    "joins": {
+      "Orders": {
+        "targetCube": "Orders",
+        "relationship": "belongsTo",
+        "on": [
+          {
+            "source": "order_details.order_id",
+            "target": "orders.id"
+          }
+        ]
+      },
+      "Products": {
+        "targetCube": "Products",
+        "relationship": "belongsTo",
+        "on": [
+          {
+            "source": "order_details.product_id",
+            "target": "products.id"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "Orders",
+    "title": "Orders",
+    "description": "Customer orders and shipping details",
+    "tableName": "orders",
+    "dimensions": {
+      "ship_name": {
+        "name": "ship_name",
+        "title": "Order",
+        "type": "string",
+        "column": "orders.ship_name"
+      },
+      "id": {
+        "name": "id",
+        "title": "Id",
+        "type": "number",
+        "column": "orders.id",
+        "primaryKey": true
+      },
+      "customer_id": {
+        "name": "customer_id",
+        "title": "Customer",
+        "type": "number",
+        "column": "orders.customer_id"
+      },
+      "employee_id": {
+        "name": "employee_id",
+        "title": "Employee",
+        "type": "number",
+        "column": "orders.employee_id"
+      },
+      "ship_via": {
+        "name": "ship_via",
+        "title": "Shipped Via",
+        "type": "number",
+        "column": "orders.ship_via"
+      },
+      "ship_address": {
+        "name": "ship_address",
+        "title": "Ship Address",
+        "type": "string",
+        "column": "orders.ship_address"
+      },
+      "ship_city": {
+        "name": "ship_city",
+        "title": "Ship City",
+        "type": "string",
+        "column": "orders.ship_city"
+      },
+      "ship_region": {
+        "name": "ship_region",
+        "title": "Ship Region",
+        "type": "string",
+        "column": "orders.ship_region"
+      },
+      "ship_postal_code": {
+        "name": "ship_postal_code",
+        "title": "Ship Postal Code",
+        "type": "string",
+        "column": "orders.ship_postal_code"
+      },
+      "ship_country": {
+        "name": "ship_country",
+        "title": "Ship Country",
+        "type": "string",
+        "column": "orders.ship_country"
+      },
+      "freight": {
+        "name": "freight",
+        "title": "Freight",
+        "type": "number",
+        "column": "orders.freight"
+      },
+      "order_date": {
+        "name": "order_date",
+        "title": "Order Date",
+        "type": "time",
+        "column": "orders.order_date"
+      },
+      "required_date": {
+        "name": "required_date",
+        "title": "Required Date",
+        "type": "time",
+        "column": "orders.required_date"
+      },
+      "shipped_date": {
+        "name": "shipped_date",
+        "title": "Shipped Date",
+        "type": "time",
+        "column": "orders.shipped_date"
+      }
+    },
+    "measures": {
+      "count": {
+        "name": "count",
+        "title": "Total Orders",
+        "type": "count",
+        "column": "orders.id"
+      }
+    },
+    "joins": {
+      "Customers": {
+        "targetCube": "Customers",
+        "relationship": "belongsTo",
+        "on": [
+          {
+            "source": "orders.customer_id",
+            "target": "customers.id"
+          }
+        ]
+      },
+      "Employees": {
+        "targetCube": "Employees",
+        "relationship": "belongsTo",
+        "on": [
+          {
+            "source": "orders.employee_id",
+            "target": "employees.id"
+          }
+        ]
+      },
+      "Shippers": {
+        "targetCube": "Shippers",
+        "relationship": "belongsTo",
+        "on": [
+          {
+            "source": "orders.ship_via",
+            "target": "shippers.id"
+          }
+        ]
+      },
+      "OrderDetails": {
+        "targetCube": "OrderDetails",
+        "relationship": "hasMany",
+        "on": [
+          {
+            "source": "orders.id",
+            "target": "order_details.order_id"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "Products",
+    "title": "Products",
+    "description": "Product catalog and inventory",
+    "tableName": "products",
+    "dimensions": {
+      "product_name": {
+        "name": "product_name",
+        "title": "Product",
+        "type": "string",
+        "column": "products.product_name"
+      },
+      "id": {
+        "name": "id",
+        "title": "Id",
+        "type": "number",
+        "column": "products.id",
+        "primaryKey": true
+      },
+      "supplier_id": {
+        "name": "supplier_id",
+        "title": "Supplier",
+        "type": "number",
+        "column": "products.supplier_id"
+      },
+      "category_id": {
+        "name": "category_id",
+        "title": "Category",
+        "type": "number",
+        "column": "products.category_id"
+      },
+      "quantity_per_unit": {
+        "name": "quantity_per_unit",
+        "title": "Quantity Per Unit",
+        "type": "string",
+        "column": "products.quantity_per_unit"
+      },
+      "unit_price": {
+        "name": "unit_price",
+        "title": "Unit Price",
+        "type": "number",
+        "column": "products.unit_price"
+      },
+      "units_in_stock": {
+        "name": "units_in_stock",
+        "title": "Units In Stock",
+        "type": "number",
+        "column": "products.units_in_stock"
+      },
+      "units_on_order": {
+        "name": "units_on_order",
+        "title": "Units On Order",
+        "type": "number",
+        "column": "products.units_on_order"
+      },
+      "reorder_level": {
+        "name": "reorder_level",
+        "title": "Reorder Level",
+        "type": "number",
+        "column": "products.reorder_level"
+      },
+      "discontinued": {
+        "name": "discontinued",
+        "title": "Discontinued",
+        "type": "number",
+        "column": "products.discontinued"
+      }
+    },
+    "measures": {
+      "count": {
+        "name": "count",
+        "title": "Total Products",
+        "type": "count",
+        "column": "products.id"
+      }
+    },
+    "joins": {
+      "Suppliers": {
+        "targetCube": "Suppliers",
+        "relationship": "belongsTo",
+        "on": [
+          {
+            "source": "products.supplier_id",
+            "target": "suppliers.id"
+          }
+        ]
+      },
+      "Categories": {
+        "targetCube": "Categories",
+        "relationship": "belongsTo",
+        "on": [
+          {
+            "source": "products.category_id",
+            "target": "categories.id"
+          }
+        ]
+      },
+      "OrderDetails": {
+        "targetCube": "OrderDetails",
+        "relationship": "hasMany",
+        "on": [
+          {
+            "source": "products.id",
+            "target": "order_details.product_id"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "Regions",
+    "title": "Regions",
+    "description": "Sales territories and geographic regions",
+    "tableName": "regions",
+    "dimensions": {
+      "id": {
+        "name": "id",
+        "title": "Id",
+        "type": "number",
+        "column": "regions.id",
+        "primaryKey": true
+      },
+      "region_description": {
+        "name": "region_description",
+        "title": "Region",
+        "type": "string",
+        "column": "regions.region_description"
+      }
+    },
+    "measures": {
+      "count": {
+        "name": "count",
+        "title": "Total Regions",
+        "type": "count",
+        "column": "regions.id"
+      }
+    }
+  },
+  {
+    "name": "Shippers",
+    "title": "Shippers",
+    "description": "Shipping companies and carriers",
+    "tableName": "shippers",
+    "dimensions": {
+      "id": {
+        "name": "id",
+        "title": "Id",
+        "type": "number",
+        "column": "shippers.id",
+        "primaryKey": true
+      },
+      "company_name": {
+        "name": "company_name",
+        "title": "Shipper",
+        "type": "string",
+        "column": "shippers.company_name"
+      },
+      "phone": {
+        "name": "phone",
+        "title": "Phone",
+        "type": "string",
+        "column": "shippers.phone"
+      }
+    },
+    "measures": {
+      "count": {
+        "name": "count",
+        "title": "Total Shippers",
+        "type": "count",
+        "column": "shippers.id"
+      }
+    }
+  },
+  {
+    "name": "Suppliers",
+    "title": "Suppliers",
+    "description": "Supplier information and contact details",
+    "tableName": "suppliers",
+    "dimensions": {
+      "company_name": {
+        "name": "company_name",
+        "title": "Supplier",
+        "type": "string",
+        "column": "suppliers.company_name"
+      },
+      "id": {
+        "name": "id",
+        "title": "Id",
+        "type": "number",
+        "column": "suppliers.id",
+        "primaryKey": true
+      },
+      "contact_name": {
+        "name": "contact_name",
+        "title": "Contact Name",
+        "type": "string",
+        "column": "suppliers.contact_name"
+      },
+      "contact_title": {
+        "name": "contact_title",
+        "title": "Contact Title",
+        "type": "string",
+        "column": "suppliers.contact_title"
+      },
+      "address": {
+        "name": "address",
+        "title": "Street Address",
+        "type": "string",
+        "column": "suppliers.address"
+      },
+      "city": {
+        "name": "city",
+        "title": "City",
+        "type": "string",
+        "column": "suppliers.city"
+      },
+      "region": {
+        "name": "region",
+        "title": "Region",
+        "type": "string",
+        "column": "suppliers.region"
+      },
+      "postal_code": {
+        "name": "postal_code",
+        "title": "Postal Code",
+        "type": "string",
+        "column": "suppliers.postal_code"
+      },
+      "country": {
+        "name": "country",
+        "title": "Country",
+        "type": "string",
+        "column": "suppliers.country"
+      },
+      "phone": {
+        "name": "phone",
+        "title": "Phone",
+        "type": "string",
+        "column": "suppliers.phone"
+      },
+      "fax": {
+        "name": "fax",
+        "title": "Fax",
+        "type": "string",
+        "column": "suppliers.fax"
+      },
+      "homepage": {
+        "name": "homepage",
+        "title": "Homepage",
+        "type": "string",
+        "column": "suppliers.homepage"
+      }
+    },
+    "measures": {
+      "count": {
+        "name": "count",
+        "title": "Total Suppliers",
+        "type": "count",
+        "column": "suppliers.id"
+      }
+    }
+  },
+  {
+    "name": "Territories",
+    "title": "Territories",
+    "description": "Sales territories within regions",
+    "tableName": "territories",
+    "dimensions": {
+      "id": {
+        "name": "id",
+        "title": "Id",
+        "type": "number",
+        "column": "territories.id",
+        "primaryKey": true
+      },
+      "territory_description": {
+        "name": "territory_description",
+        "title": "Territory",
+        "type": "string",
+        "column": "territories.territory_description"
+      },
+      "territory_id": {
+        "name": "territory_id",
+        "title": "Territory ID",
+        "type": "string",
+        "column": "territories.territory_id"
+      },
+      "region_id": {
+        "name": "region_id",
+        "title": "Region",
+        "type": "number",
+        "column": "territories.region_id"
+      }
+    },
+    "measures": {
+      "count": {
+        "name": "count",
+        "title": "Total Territories",
+        "type": "count",
+        "column": "territories.id"
+      }
+    },
+    "joins": {
+      "Regions": {
+        "targetCube": "Regions",
+        "relationship": "belongsTo",
+        "on": [
+          {
+            "source": "territories.region_id",
+            "target": "regions.id"
+          }
+        ]
+      },
+      "EmployeeTerritories": {
+        "targetCube": "EmployeeTerritories",
+        "relationship": "hasMany",
+        "on": [
+          {
+            "source": "territories.id",
+            "target": "employee_territories.territory_id"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "UsStates",
+    "title": "US States",
+    "description": "United States state reference data",
+    "tableName": "us_states",
+    "dimensions": {
+      "id": {
+        "name": "id",
+        "title": "Id",
+        "type": "number",
+        "column": "us_states.id",
+        "primaryKey": true
+      },
+      "state_name": {
+        "name": "state_name",
+        "title": "US State",
+        "type": "string",
+        "column": "us_states.state_name"
+      },
+      "state_abbr": {
+        "name": "state_abbr",
+        "title": "State Abbreviation",
+        "type": "string",
+        "column": "us_states.state_abbr"
+      },
+      "state_region": {
+        "name": "state_region",
+        "title": "State Region",
+        "type": "string",
+        "column": "us_states.state_region"
+      }
+    },
+    "measures": {
+      "count": {
+        "name": "count",
+        "title": "Total US States",
+        "type": "count",
+        "column": "us_states.id"
+      }
+    }
+  }
+]

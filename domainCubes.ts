@@ -1,0 +1,189 @@
+/**
+ * Domain cube path: converts Semantius domain_cubes (semantic model) into
+ * Drizzle schema + Cube[] definitions.
+ */
+
+import { writeFileSync } from 'fs'
+import { jsonToSchema, type SchemaJSON, type SerializedColumn } from './schemaGenerator'
+import { entityCubesToCubes } from './entityCubeCore'
+import type { EntityCube, EntityCubeJoin, EntityDimension, EntityMeasure } from './entityCubeCore'
+
+
+// ─── Helpers ───
+
+function toPascalCase(snake: string): string {
+  return snake.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('')
+}
+
+function domainPropToDimensionType(prop: any): 'string' | 'number' | 'boolean' | 'time' {
+  if (prop.format === 'date' || prop.format === 'date-time') return 'time'
+  if (prop.type === 'integer' || prop.type === 'number') return 'number'
+  if (prop.type === 'boolean') return 'boolean'
+  return 'string'
+}
+
+function domainPropToSqlType(prop: any): SerializedColumn['type'] {
+  if (prop.format === 'reference' || prop.format === 'parent') return 'integer'
+  if (prop.format === 'date' || prop.format === 'date-time') return 'timestamp'
+  if (prop.type === 'integer') return 'integer'
+  if (prop.type === 'number') return 'real'
+  if (prop.type === 'boolean') return 'boolean'
+  return 'text'
+}
+
+// ─── domain_cubes → EntityCube[] ───
+
+function domainCubesToEntityCubes(domainCubes: any[]): EntityCube[] {
+  const tableNames = new Set(domainCubes.map((dc: any) => dc.table.table_name))
+
+  const cubes = domainCubes.map((dc: any) => {
+    const tableName: string = dc.table.table_name
+    const cubeName = toPascalCase(tableName)
+    const properties: Record<string, any> = dc.properties || {}
+
+    const dimensions: Record<string, EntityDimension> = {}
+    const measures: Record<string, EntityMeasure> = {}
+    const joins: Record<string, EntityCubeJoin> = {}
+
+    for (const [fieldName, prop] of Object.entries(properties) as [string, any][]) {
+      // Skip system timestamp fields
+      if (prop.inputMode === 'disabled') continue
+
+      // Reference fields → belongsTo join + FK dimension
+      if (prop.format === 'reference' || prop.format === 'parent') {
+        if (prop.reference_table && tableNames.has(prop.reference_table)) {
+          const targetCubeName = toPascalCase(prop.reference_table)
+          joins[targetCubeName] = {
+            targetCube: targetCubeName,
+            relationship: 'belongsTo',
+            on: [{
+              source: `${tableName}.${fieldName}`,
+              target: `${prop.reference_table}.${prop.reference_table_id_column || 'id'}`
+            }]
+          }
+        }
+        dimensions[fieldName] = {
+          name: fieldName,
+          title: prop.title || fieldName,
+          type: 'number',
+          column: `${tableName}.${fieldName}`
+        }
+        continue
+      }
+
+      // Regular field → dimension
+      const isPk = prop.ctype === 'id'
+      dimensions[fieldName] = {
+        name: fieldName,
+        title: prop.title || fieldName,
+        type: isPk ? 'number' : domainPropToDimensionType(prop),
+        column: `${tableName}.${fieldName}`,
+        ...(isPk && { primaryKey: true })
+      }
+    }
+
+    // Always add a count measure on the id column
+    const idField = Object.entries(properties).find(([_, p]: [string, any]) => p.ctype === 'id')
+    if (idField) {
+      measures.count = {
+        name: 'count',
+        title: `Total ${dc.table.plural_label || cubeName}`,
+        type: 'count',
+        column: `${tableName}.${idField[0]}`
+      }
+    }
+
+    // Children → hasMany joins
+    if (dc.children) {
+      for (const child of dc.children as any[]) {
+        const [childTable, childColumn] = (child.id as string).split('.')
+        if (tableNames.has(childTable)) {
+          const childCubeName = toPascalCase(childTable)
+          if (!joins[childCubeName]) {
+            joins[childCubeName] = {
+              targetCube: childCubeName,
+              relationship: 'hasMany',
+              on: [{ source: `${tableName}.id`, target: `${childTable}.${childColumn}` }]
+            }
+          }
+        }
+      }
+    }
+
+    return {
+      name: cubeName,
+      title: dc.table.plural_label || cubeName,
+      description: dc.description || '',
+      tableName,
+      dimensions,
+      measures,
+      ...(Object.keys(joins).length > 0 && { joins })
+    } as EntityCube
+  })
+
+  // ── Pass 2: infer reverse hasMany joins from belongsTo ──
+  const cubesByName = new Map(cubes.map(c => [c.name, c]))
+
+  for (const cube of cubes) {
+    if (!cube.joins) continue
+    for (const join of Object.values(cube.joins)) {
+      
+      if (join.relationship !== 'belongsTo') continue
+      const targetCube = cubesByName.get(join.targetCube)
+      if (!targetCube || targetCube.name === cube.name) continue
+
+      if (!targetCube.joins) targetCube.joins = {}
+      if (targetCube.joins[cube.name]) continue
+
+      targetCube.joins[cube.name] = {
+        targetCube: cube.name,
+        relationship: 'hasMany',
+        on: join.on.map(({ source, target }) => ({ source: target, target: source })),
+      }
+    }
+  }
+
+  return cubes
+}
+
+// ─── domain_cubes → SchemaJSON ───
+
+function domainCubesToSchemaJSON(domainCubes: any[]): SchemaJSON {
+  const result: SchemaJSON = {}
+
+  for (const dc of domainCubes) {
+    const tableName: string = dc.table.table_name
+    const properties: Record<string, any> = dc.properties || {}
+    const columns: SerializedColumn[] = []
+
+    for (const [fieldName, prop] of Object.entries(properties) as [string, any][]) {
+      const isPk = prop.ctype === 'id'
+      columns.push({
+        key: fieldName,
+        name: fieldName,
+        type: domainPropToSqlType(prop),
+        primaryKey: isPk,
+        notNull: isPk || prop.inputMode === 'required',
+        hasDefault: isPk || (!!prop.default && prop.default !== ''),
+        ...(isPk && { generatedIdentity: 'always' as const }),
+      })
+    }
+
+    result[tableName] = { tableName, columns }
+  }
+
+  return result
+}
+
+// ─── Build entry point ───
+
+export function buildDomainCubes(domainCubes: any[]) {
+  const entityCubes = domainCubesToEntityCubes(domainCubes)
+  // writeFileSync('domainCubes.json', JSON.stringify(entityCubes, null, 2))
+  const cubeSchemaJSON = domainCubesToSchemaJSON(domainCubes)
+  const schema = jsonToSchema(cubeSchemaJSON)
+  const allCubes = entityCubesToCubes(entityCubes, schema as unknown as Record<string, unknown>)
+  return { schema, allCubes, cubeSchemaJSON }
+}
+
+export { domainCubesToEntityCubes, domainCubesToSchemaJSON }
