@@ -125,7 +125,7 @@ app.use('*', logger())
 app.use('*', cors({
   origin: '*',
   allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization', 'X-Agent-Api-Key', 'X-Agent-Provider', 'X-Agent-Model', 'X-Agent-Base-URL', 'MCP-Protocol-Version', 'Mcp-Session-Id'],
+  allowHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'X-Agent-Api-Key', 'X-Agent-Provider', 'X-Agent-Model', 'X-Agent-Base-URL', 'MCP-Protocol-Version', 'Mcp-Session-Id'],
   exposeHeaders: ['MCP-Protocol-Version', 'Mcp-Session-Id'],
 }))
 

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C c:/dev/drizzle-cube-try-site log --oneline -10)",
+      "Bash(git -C c:/dev/drizzle-cube-try-site log --oneline -15)",
+      "Bash(git -C c:/dev/drizzle-cube-try-site diff HEAD~3..HEAD -- app.ts)"
+    ]
+  }
+}
