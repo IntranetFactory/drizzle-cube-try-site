@@ -26,3 +26,8 @@ npm run deploy         # Production deploy (uses src/worker.ts)
 
 - `app.ts` — connects to local PostgreSQL, no KV/R2/Hyperdrive bindings
 - `src/worker.ts` — uses Cloudflare bindings (KV cache, Hyperdrive, R2 thumbnails), Neon database
+
+## Working Notes
+
+- Do NOT use the external `~/.claude/projects/` memory system. Store all notes in this CLAUDE.md.
+- Only modify exactly what was asked. Do not add unrequested fields, types, or declarations. Mention extras as suggestions in text only.

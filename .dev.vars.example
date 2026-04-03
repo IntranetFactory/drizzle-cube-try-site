@@ -15,11 +15,15 @@ GEMINI_API_KEY=AI....
 
 # PDF Export Configuration (required for Export PDF feature)
 # Get your account ID from: Cloudflare Dashboard > Account > Account ID
-CLOUDFLARE_ACCOUNT_ID="your-cloudflare-account-id"
+# LOUDFLARE_ACCOUNT_ID="your-cloudflare-account-id"
 # Create an API token with Browser Rendering permissions
 CF_BROWSER_RENDERING_TOKEN="your-cloudflare-api-token"
 # Public URL of the deployed site (local dev won't work with Browser Rendering)
 PUBLIC_URL="https://your-site.pages.dev"
+
+# Semantius auth server (server-side)
+AUTH_SERVER_API_KEY="your-auth-server-api-key"
+SEMANTIUS_ORG="tests"
 
 # Agentic Notebooks (Anthropic)
 # Public demo mode uses user-provided keys from the browser UI.

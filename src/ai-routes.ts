@@ -10,8 +10,8 @@ import type { DrizzleDatabase } from 'drizzle-cube/server'
 import { SemanticLayerCompiler, createDatabaseExecutor } from 'drizzle-cube/server'
 import type { ExplainResult, AIExplainAnalysis } from 'drizzle-cube/server'
 import { buildExplainAnalysisPrompt, formatCubeSchemaForExplain, formatExistingIndexes } from 'drizzle-cube/server'
-import { settings, schema } from '../drizzle_schema'
-import { buildDrizzleCubes } from '../drizzleCubes'
+import { settings, schema } from './drizzle_schema'
+import { buildDrizzleCubes } from './drizzleCubes'
 
 interface GeminiMessageRequest {
   contents: Array<{

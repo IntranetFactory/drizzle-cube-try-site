@@ -10,12 +10,10 @@
     "dev:worker": "wrangler dev --test-scheduled --port 3459 --live-reload",
     "dev:client": "vite",
     "dev:full": "concurrently \"npm:dev:server\" \"npm:dev:client\"",
-    "build": "npm run build:client && npm run build:worker",
+    "build": "npm run build:client",
     "build:client": "tsc --project tsconfig.client.json && vite build",
-    "build:worker": "tsc --project tsconfig.worker.json",
     "build:full": "npm run build",
-    "start": "node dist/index.js",
-    "deploy": "npm run build && wrangler deploy",
+    "start": "node dist/index.js",    
     "deploy:staging": "npm run build && wrangler deploy --env staging",
     "cf:login": "wrangler auth login",
     "cf:whoami": "wrangler whoami",
@@ -28,9 +26,12 @@
     "db:seed": "tsx scripts/seed.ts",
     "db:studio": "drizzle-kit studio",
     "typecheck": "tsc --noEmit",
+    "typecheck:worker": "tsc --project tsconfig.worker.json --noEmit",
     "setup": "npm run docker:up && sleep 5 && npm run db:generate && npm run db:migrate && npm run db:seed",
     "setup:neon": "npm run db:generate && npm run db:migrate && npm run db:seed",
-    "ci:all": "npm ci && cd client && npm ci"
+    "ci:all": "npm ci && cd client && npm ci",
+    "deploy:server": "wrangler deploy",
+    "deploy:logs": "wrangler tail cube-server --format pretty"
   },
   "dependencies": {
     "@anthropic-ai/sdk": ">=0.30.0",

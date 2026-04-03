@@ -9,22 +9,33 @@ import { cors } from 'hono/cors'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { drizzle as drizzleNeon } from 'drizzle-orm/neon-serverless'
 import postgres from 'postgres'
-import { Pool } from '@neondatabase/serverless'
+import { Pool, neonConfig } from '@neondatabase/serverless'
 import { createCubeApp } from 'drizzle-cube/adapters/hono'
-import type { SecurityContext, DrizzleDatabase } from 'drizzle-cube/server'
+import type { SecurityContext, DrizzleDatabase, CacheConfig } from 'drizzle-cube/server'
+import { CloudflareKVProvider } from './cache/cloudflare-kv-provider'
 import { buildDrizzleCubes } from './drizzleCubes'
-import { writeFileSync } from 'fs'
 import { buildDomainCubes } from './domainCubes'
 import * as drizzleSchema from './drizzle_schema'
-import analyticsApp from './src/analytics-routes'
-import notebooksApp from './src/notebooks-routes'
-import aiApp from './src/ai-routes'
+import analyticsApp from './analytics-routes'
+import notebooksApp from './notebooks-routes'
+import aiApp from './ai-routes'
 import { sql } from 'drizzle-orm'
 import type { RLSSetupFn } from 'drizzle-cube'
-import { resolveControlPlane } from "./src/utils/controlPlane.ts"
+import { resolveControlPlane } from "./utils/controlPlane.ts"
+
+interface Bindings {
+  CACHE?: KVNamespace
+  THUMBNAILS?: R2Bucket
+  CLOUDFLARE_ACCOUNT_ID?: string
+  CF_BROWSER_RENDERING_TOKEN?: string
+  PUBLIC_URL?: string
+  ENABLE_QUERY_CACHE?: string  // set to "true" to enable KV-backed cube query caching
+  AUTH_SERVER_API_KEY?: string
+}
 
 interface Variables {
   db: DrizzleDatabase
+  r2?: R2Bucket
   cfAccountId?: string
   cfApiToken?: string
   publicUrl?: string
@@ -48,24 +59,40 @@ function getEnvironment() {
   return 'unknown'
 }
 
+// Enable WebSocket-based transactions for Neon when running in Cloudflare Workers
+if (getEnvironment() === 'worker') {
+  neonConfig.webSocketConstructor = WebSocket
+}
+
 // Extract org from request host (e.g. testj.semantius.ai → "testj"), falling back to env var
 function getOrg(c: any): string {
   const host = c.req.header("x-forwarded-host") || c.req.header("host");
   const fromHost = (host || "").split(".")[0];
-  const org = fromHost || getEnvVar('SEMANTIUS_ORG');
+  const org = fromHost || getEnvVar('SEMANTIUS_ORG', '', c.env);
   console.log('Extracted org:', org)
   return org
 }
 
-// Get environment variable with fallback for different runtimes
-function getEnvVar(key: string, fallback: string = ''): string {
-  const env = getEnvironment()
-
-  if (env === 'node' && typeof process !== 'undefined') {
-    return process.env[key] || fallback
+// Build KV-backed cache config if ENABLE_QUERY_CACHE=true and CACHE binding is present
+function buildCacheConfig(cacheKV?: KVNamespace, enableQueryCache?: string): CacheConfig | undefined {
+  if (enableQueryCache !== 'true' || !cacheKV) return undefined
+  return {
+    provider: new CloudflareKVProvider(cacheKV, { defaultTtlMs: 3600000 }),
+    defaultTtlMs: 3600000,
+    keyPrefix: 'drizzle-cube:',
+    includeSecurityContext: true,
+    onError: (error: Error, operation: string) => {
+      console.error(`[Cache Error] ${operation}: ${error.message}`)
+    }
   }
+}
 
-  // For Cloudflare Workers, we'll set this up in the handler
+// Get environment variable with fallback for different runtimes.
+// Pass `env` (i.e. `c.env`) when inside a Cloudflare Workers request handler.
+function getEnvVar(key: string, fallback: string = '', env?: Record<string, any>): string {
+  if (env?.[key] !== undefined) return (env[key] as string) || fallback
+  if (typeof (globalThis as any).Deno !== 'undefined') return (globalThis as any).Deno.env.get(key) || fallback
+  if (typeof process !== 'undefined' && process.env) return process.env[key] || fallback
   return fallback
 }
 
@@ -129,7 +156,7 @@ async function extractSecurityContext(c: any): Promise<SecurityContext> {
 }
 
 // Create the main Hono app
-const app = new Hono<{ Variables: Variables }>()
+const app = new Hono<{ Variables: Variables; Bindings: Bindings }>()
 
 // Add middleware
 app.use('*', logger())
@@ -142,7 +169,7 @@ app.use('*', cors({
 
 function buildOutHeaders(c: any, extra?: Record<string, string>): Record<string, string> | null {
   const headers: Record<string, string> = {
-    'x-auth-server-api-key': getEnvVar('AUTH_SERVER_API_KEY'),
+    'x-auth-server-api-key': getEnvVar('AUTH_SERVER_API_KEY', '', c.env),
     ...extra,
   }
   const authorization = c.req.header('Authorization')
@@ -156,7 +183,7 @@ function buildOutHeaders(c: any, extra?: Record<string, string>): Record<string,
 // Semantius auth middleware - validates every request
 app.use('*', async (c, next) => {
 
-  const envOrg = getEnvVar('SEMANTIUS_ORG')
+  const envOrg = getEnvVar('SEMANTIUS_ORG', '', c.env)
   let tenantName: string
   if (envOrg) {
     tenantName = envOrg
@@ -188,7 +215,7 @@ console.log('[semantius] resolved tenant info:', tenantInfo)
   c.set('semantiusUser', semantiusUser)
 
   // Create per-tenant database connection from semantiusUser.databaseUrl
-  const dbUrl = (semantiusUser as any)?.databaseUrl || getEnvVar('DATABASE_URL', defaultConnectionString)
+  const dbUrl = (semantiusUser as any)?.databaseUrl || getEnvVar('DATABASE_URL', defaultConnectionString, c.env)
   const db = createDatabase(dbUrl)
   c.set('db', db as DrizzleDatabase)
 
@@ -196,13 +223,17 @@ console.log('[semantius] resolved tenant info:', tenantInfo)
 })
 
 
-function getCloudBaseUrl(c: any): string {
-  return "https://tests.cloud.adenin.com"
+// Returns the auth server base URL: AUTH_SERVER_URL env override, or derived from tenant name
+function getAuthServerBaseUrl(c: any): string {
+  const authServerUrl = getEnvVar('AUTH_SERVER_URL', '', c.env);
+  if (authServerUrl) return authServerUrl;
+  const tenantInfo = c.get('tenantInfo');
+  const requestTenant = tenantInfo?.name;
+  return `https://${requestTenant}.semantius.cloud`;
 }
 
-
 export function authorizationServerMetadata(c: any) {
-  const base = getCloudBaseUrl(c)
+  const base = `${getAuthServerBaseUrl(c)}/api/auth`
   return c.json({
     issuer: base,
     authorization_endpoint: `${base}/oauth/authorize`,
@@ -223,8 +254,7 @@ const oauthMetadataHandler = (c: any) => {
   const host = c.req.header("x-forwarded-host") || c.req.header("host");
   const baseUrl = `${protocol}://${host}`;
 
-  // Derive auth server from request host: testj.semantius.ai → https://testj.semantius.cloud/api/auth
-  const authServerUrl = `https://${tenantInfo.name}.semantius.cloud/api/auth`;
+  const authServerUrl = `${getAuthServerBaseUrl(c)}/api/auth`;
 
   return c.json({
     resource: `${baseUrl}/mcp`,
@@ -237,6 +267,59 @@ const oauthMetadataHandler = (c: any) => {
 app.get('/.well-known/oauth-protected-resource', oauthMetadataHandler)
 app.get('/.well-known/oauth-protected-resource/mcp', oauthMetadataHandler)
 app.get('/.well-known/oauth-authorization-server', authorizationServerMetadata)
+
+// MCP endpoint — fixed to "nwind" domain for now, TODO: make tenant-aware
+app.all('/mcp/*', async (c) => {
+  const domain = 'nwind'
+  c.set('domain', domain)
+
+  const semantiusUser = c.get('semantiusUser') as { postgrestUrl: string; access_token: string }
+  if (semantiusUser?.postgrestUrl && semantiusUser?.access_token) {
+    try {
+      const rpcRes = await fetch(`${semantiusUser.postgrestUrl}/rpc/get_module_cubes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${semantiusUser.access_token}`,
+        },
+        body: JSON.stringify({ p_module_name: domain }),
+      })
+      const domain_cubes = await rpcRes.json() as any[]
+      c.set('domain_cubes', domain_cubes)
+      console.log(`[get_module_cubes] fetched ${domain_cubes.length} cubes for domain "${domain}"`)
+    } catch (err) {
+      console.error('[get_module_cubes] error:', err)
+    }
+  }
+
+  const domainCubeData: any[] | undefined = c.get('domain_cubes')
+  const { schema, allCubes } = buildDomainCubes(domainCubeData)
+  const db = c.get('db')
+
+  const rlsSetup: RLSSetupFn = async (tx: any, securityContext: any) => {
+    const sub = securityContext.semantiusUser?.claims?.sub
+    await tx.execute(sql.raw(`SET ROLE authenticated`))
+    await tx.execute(sql.raw(`SELECT set_config('role', 'semantius_user', true)`))
+    await tx.execute(sql.raw(`SELECT set_config('request.jwt.claim.sub', '${sub}', true)`))
+    await tx.execute(sql.raw(`SELECT set_config('request.jwt.claim.role', 'authenticated', true)`))
+    await tx.execute(sql.raw(`SELECT set_config('request.jwt.claim.aud', '', true)`))
+  }
+
+  const cubeApp = createCubeApp({
+    cubes: allCubes,
+    drizzle: db,
+    schema: schema as any,
+    mcp: { enabled: true, app: true },
+    engineType: 'postgres',
+    basePath: '/v1',
+    rlsSetup,
+    cache: buildCacheConfig(c.env?.CACHE, c.env?.ENABLE_QUERY_CACHE),
+    agent: { allowClientApiKey: true, maxTurns: 25 },
+    extractSecurityContext: async () => ({ semantiusUser }),
+  })
+
+  return await cubeApp.fetch(c.req.raw, c.env)
+})
 
 // Root endpoint with available routes
 app.get('/', (c) => {
@@ -395,6 +478,7 @@ app.all('/:domain/cubejs-api/*', async (c) => {
     engineType: 'postgres',
     basePath: '/v1',
     rlsSetup,
+    cache: buildCacheConfig(c.env?.CACHE, c.env?.ENABLE_QUERY_CACHE),
     agent: {
       allowClientApiKey: true,
       maxTurns: 25
@@ -433,10 +517,10 @@ app.all('/:domain/cubejs-api/*', async (c) => {
 
 // Mount analytics pages API with database and PDF export configuration
 app.use('/api/analytics-pages/*', async (c, next) => {
-  // PDF export configuration (from .env for Node.js)
-  c.set('cfAccountId', getEnvVar('CLOUDFLARE_ACCOUNT_ID'))
-  c.set('cfApiToken', getEnvVar('CF_BROWSER_RENDERING_TOKEN'))
-  c.set('publicUrl', getEnvVar('PUBLIC_URL'))
+  c.set('r2', c.env?.THUMBNAILS)
+  c.set('cfAccountId', getEnvVar('CLOUDFLARE_ACCOUNT_ID', '', c.env))
+  c.set('cfApiToken', getEnvVar('CF_BROWSER_RENDERING_TOKEN', '', c.env))
+  c.set('publicUrl', getEnvVar('PUBLIC_URL', '', c.env))
   await next()
 })
 app.route('/api/analytics-pages', analyticsApp)
@@ -453,39 +537,6 @@ app.use('/api/ai/*', async (_c, next) => {
   await next()
 })
 app.route('/api/ai', aiApp)
-
-// GitHub stars endpoint with in-memory caching (for local dev)
-let githubStarsCache: { stars: number; timestamp: number } | null = null
-const CACHE_TTL_MS = 3600000 // 1 hour
-
-app.get('/api/github-stars', async (c) => {
-  // Check cache
-  if (githubStarsCache && Date.now() - githubStarsCache.timestamp < CACHE_TTL_MS) {
-    return c.json({ stars: githubStarsCache.stars, cached: true })
-  }
-
-  try {
-    const res = await fetch('https://api.github.com/repos/cliftonc/drizzle-cube', {
-      headers: { 'User-Agent': 'drizzle-cube-try-site' }
-    })
-
-    if (!res.ok) {
-      console.error(`GitHub API error: ${res.status}`)
-      return c.json({ stars: null, error: 'GitHub API unavailable' }, 502)
-    }
-
-    const data = await res.json() as { stargazers_count?: number }
-    const stars = data.stargazers_count ?? 0
-
-    // Cache the result
-    githubStarsCache = { stars, timestamp: Date.now() }
-
-    return c.json({ stars, cached: false })
-  } catch (error) {
-    console.error('GitHub stars fetch error:', error)
-    return c.json({ stars: null, error: 'Failed to fetch stars' }, 500)
-  }
-})
 
 // Example protected endpoint showing how to use the same security context
 app.get('/api/user-info', async (c) => {
