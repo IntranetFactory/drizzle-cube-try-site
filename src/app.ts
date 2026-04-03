@@ -21,6 +21,7 @@ import notebooksApp from './src/notebooks-routes'
 import aiApp from './src/ai-routes'
 import { sql } from 'drizzle-orm'
 import type { RLSSetupFn } from 'drizzle-cube'
+import { resolveControlPlane } from "./src/utils/controlPlane.ts"
 
 interface Variables {
   db: DrizzleDatabase
@@ -28,6 +29,7 @@ interface Variables {
   cfApiToken?: string
   publicUrl?: string
   semantiusUser: unknown
+  tenantInfo: unknown
   domain: string
   domain_cubes: any[]
   module_cubes: Record<string, any>
@@ -44,6 +46,15 @@ function getEnvironment() {
     return 'node'
   }
   return 'unknown'
+}
+
+// Extract org from request host (e.g. testj.semantius.ai → "testj"), falling back to env var
+function getOrg(c: any): string {
+  const host = c.req.header("x-forwarded-host") || c.req.header("host");
+  const fromHost = (host || "").split(".")[0];
+  const org = fromHost || getEnvVar('SEMANTIUS_ORG');
+  console.log('Extracted org:', org)
+  return org
 }
 
 // Get environment variable with fallback for different runtimes
@@ -129,7 +140,7 @@ app.use('*', cors({
   exposeHeaders: ['MCP-Protocol-Version', 'Mcp-Session-Id'],
 }))
 
-function buildOutHeaders(c: any, extra?: Record<string, string>): Record<string, string> {
+function buildOutHeaders(c: any, extra?: Record<string, string>): Record<string, string> | null {
   const headers: Record<string, string> = {
     'x-auth-server-api-key': getEnvVar('AUTH_SERVER_API_KEY'),
     ...extra,
@@ -138,23 +149,37 @@ function buildOutHeaders(c: any, extra?: Record<string, string>): Record<string,
   const xApiKey = c.req.header('x-api-key')
   if (authorization) headers['Authorization'] = authorization.startsWith('Bearer ') ? authorization : `Bearer ${authorization}`
   if (xApiKey) headers['x-api-key'] = xApiKey
+  if (!authorization && !xApiKey) return null;
   return headers
 }
 
 // Semantius auth middleware - validates every request
 app.use('*', async (c, next) => {
-  const org = getEnvVar('SEMANTIUS_ORG')
 
-  const authRes = await fetch(`https://api.semantius.cloud/tenant/${org}`, {
-    headers: buildOutHeaders(c),
-  })
+  const envOrg = getEnvVar('SEMANTIUS_ORG')
+  let tenantName: string
+  if (envOrg) {
+    tenantName = envOrg
+  } else {
+    const host = (c.req.header('x-forwarded-host') || c.req.header('host') || '').split(':')[0]
+    tenantName = host.split('.')[0]
+  }
+  const tenantInfo = await resolveControlPlane(tenantName)
+console.log('[semantius] resolved tenant info:', tenantInfo)
+  c.set('tenantInfo', tenantInfo)
 
-  if (authRes.status !== 200) {
-    const body = await authRes.text()
-    console.log('[semantius] error', authRes.status, body)
+  if (c.req.path.startsWith('/.well-known/')) return next()
+  
+  let headers = buildOutHeaders(c)
+
+  const authRes = headers ? await fetch(`https://api.semantius.cloud/tenant/${tenantName}`, { headers }) : null
+
+  if (!authRes || authRes.status !== 200) {
+    const body = authRes ? await authRes.text() : 'Unauthorized'
+    console.log('[semantius] error', authRes?.status, body)
     return new Response(body, {
-      status: authRes.status,
-      headers: Object.fromEntries(authRes.headers.entries()),
+      status: authRes?.status ?? 401,
+      headers: authRes ? Object.fromEntries(authRes.headers.entries()) : {},
     })
   }
 
@@ -169,6 +194,49 @@ app.use('*', async (c, next) => {
 
   await next()
 })
+
+
+function getCloudBaseUrl(c: any): string {
+  return "https://tests.cloud.adenin.com"
+}
+
+
+export function authorizationServerMetadata(c: any) {
+  const base = getCloudBaseUrl(c)
+  return c.json({
+    issuer: base,
+    authorization_endpoint: `${base}/oauth/authorize`,
+    token_endpoint: `${base}/oauth/token`,
+    registration_endpoint: `${base}/oauth/register`,
+    revocation_endpoint: `${base}/oauth/token/revoke`,
+    scopes_supported: ['mcp:read'],
+    response_types_supported: ['code'],
+    grant_types_supported: ['authorization_code', 'refresh_token'],
+    token_endpoint_auth_methods_supported: ['none', 'client_secret_post'],
+    code_challenge_methods_supported: ['S256'],
+  })
+}
+
+const oauthMetadataHandler = (c: any) => {
+  let tenantInfo = c.get('tenantInfo');
+  const protocol = c.req.header("x-forwarded-proto") || new URL(c.req.url).protocol.slice(0, -1);
+  const host = c.req.header("x-forwarded-host") || c.req.header("host");
+  const baseUrl = `${protocol}://${host}`;
+
+  // Derive auth server from request host: testj.semantius.ai → https://testj.semantius.cloud/api/auth
+  const authServerUrl = `https://${tenantInfo.name}.semantius.cloud/api/auth`;
+
+  return c.json({
+    resource: `${baseUrl}/mcp`,
+    authorization_servers: [authServerUrl],
+    scopes_supported: tenantInfo ? [`tenant:${tenantInfo.id}:user`] : [],
+    bearer_methods_supported: ["header"],
+  });
+};
+
+app.get('/.well-known/oauth-protected-resource', oauthMetadataHandler)
+app.get('/.well-known/oauth-protected-resource/mcp', oauthMetadataHandler)
+app.get('/.well-known/oauth-authorization-server', authorizationServerMetadata)
 
 // Root endpoint with available routes
 app.get('/', (c) => {
@@ -294,7 +362,7 @@ app.all('/:domain/cubejs-api/*', async (c) => {
 
   // Build cubes from domain_cubes (semantic model)
   const domainCubeData: any[] | undefined = c.get('domain_cubes')
-  const { schema, allCubes, cubeSchemaJSON } = buildDomainCubes(domainCubeData);    
+  const { schema, allCubes, cubeSchemaJSON } = buildDomainCubes(domainCubeData);
 
   // Expose cubeSchemaJSON as module_cubes for downstream consumers
   c.set('module_cubes', cubeSchemaJSON)
@@ -306,7 +374,7 @@ app.all('/:domain/cubejs-api/*', async (c) => {
     // console.log('RLS setup-claims:', securityContext.semantiusUser?.claims)
 
     const sub = securityContext.semantiusUser?.claims?.sub
-        
+
     await tx.execute(sql.raw(`SET ROLE authenticated`))
     await tx.execute(sql.raw(`SELECT set_config('role', 'semantius_user', true)`))
     await tx.execute(sql.raw(`SELECT set_config('request.jwt.claim.sub', '${sub}', true)`))
@@ -320,6 +388,10 @@ app.all('/:domain/cubejs-api/*', async (c) => {
     cubes: allCubes,
     drizzle: db,
     schema: schema as any,
+    mcp: {
+      enabled: true,
+      app: true
+    },
     engineType: 'postgres',
     basePath: '/v1',
     rlsSetup,
@@ -356,6 +428,9 @@ app.all('/:domain/cubejs-api/*', async (c) => {
   return response
 })
 
+
+
+
 // Mount analytics pages API with database and PDF export configuration
 app.use('/api/analytics-pages/*', async (c, next) => {
   // PDF export configuration (from .env for Node.js)
@@ -370,6 +445,7 @@ app.route('/api/analytics-pages', analyticsApp)
 app.use('/api/notebooks/*', async (_c, next) => {
   await next()
 })
+
 app.route('/api/notebooks', notebooksApp)
 
 // Mount AI proxy routes with database access
