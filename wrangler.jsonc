@@ -6,9 +6,20 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+    "routes": [
+    {
+      "pattern": "*.semantius.io/*",
+      "zone_name": "semantius.io"
+    },    
+    {
+      "pattern": "cubes.semantius.cloud",
+      "zone_name": "semantius.cloud",
+      "custom_domain": true
+    }
+  ],
   // Plain config vars (non-sensitive)
   "vars": {
-    "SEMANTIUS_ORG": "tests"
+    // "SEMANTIUS_ORG": "tests"
   },
 
   // Secrets (set via: wrangler secret put <KEY>)

@@ -13,12 +13,12 @@ import { Pool, neonConfig } from '@neondatabase/serverless'
 import { createCubeApp } from 'drizzle-cube/adapters/hono'
 import type { SecurityContext, DrizzleDatabase, CacheConfig } from 'drizzle-cube/server'
 import { CloudflareKVProvider } from './cache/cloudflare-kv-provider'
-import { buildDrizzleCubes } from './drizzleCubes'
+
 import { buildDomainCubes } from './domainCubes'
 import * as drizzleSchema from './drizzle_schema'
 import analyticsApp from './analytics-routes'
 import notebooksApp from './notebooks-routes'
-import aiApp from './ai-routes'
+
 import { sql } from 'drizzle-orm'
 import type { RLSSetupFn } from 'drizzle-cube'
 import { resolveControlPlane } from "./utils/controlPlane.ts"
@@ -192,11 +192,12 @@ app.use('*', async (c, next) => {
     tenantName = host.split('.')[0]
   }
   const tenantInfo = await resolveControlPlane(tenantName)
-console.log('[semantius] resolved tenant info:', tenantInfo)
+  //console.log('[semantius] resolved tenant info:', tenantInfo)
+
   c.set('tenantInfo', tenantInfo)
 
   if (c.req.path.startsWith('/.well-known/')) return next()
-  
+
   let headers = buildOutHeaders(c)
 
   const authRes = headers ? await fetch(`https://api.semantius.cloud/tenant/${tenantName}`, { headers }) : null
@@ -268,27 +269,36 @@ app.get('/.well-known/oauth-protected-resource', oauthMetadataHandler)
 app.get('/.well-known/oauth-protected-resource/mcp', oauthMetadataHandler)
 app.get('/.well-known/oauth-authorization-server', authorizationServerMetadata)
 
-// MCP endpoint — fixed to "nwind" domain for now, TODO: make tenant-aware
+// MCP endpoint
 app.all('/mcp/*', async (c) => {
-  const domain = 'nwind'
+  const domain = ''
   c.set('domain', domain)
 
   const semantiusUser = c.get('semantiusUser') as { postgrestUrl: string; access_token: string }
   if (semantiusUser?.postgrestUrl && semantiusUser?.access_token) {
     try {
-      const rpcRes = await fetch(`${semantiusUser.postgrestUrl}/rpc/get_module_cubes`, {
+      const rpcUrl = domain
+        ? `${semantiusUser.postgrestUrl}/rpc/get_module_cubes`
+        : `${semantiusUser.postgrestUrl}/rpc/get_user_cubes`
+      const rpcBody = domain ? JSON.stringify({ p_module_name: domain }) : JSON.stringify({})
+      const rpcRes = await fetch(rpcUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${semantiusUser.access_token}`,
         },
-        body: JSON.stringify({ p_module_name: domain }),
+        body: rpcBody,
       })
+      if (!rpcRes.ok) {
+        const errBody = await rpcRes.text()
+        console.error(`[get_user_cubes] ${rpcRes.status} error from ${rpcUrl}:`, errBody)
+        return c.json(JSON.parse(errBody), rpcRes.status as any)
+      }
       const domain_cubes = await rpcRes.json() as any[]
       c.set('domain_cubes', domain_cubes)
-      console.log(`[get_module_cubes] fetched ${domain_cubes.length} cubes for domain "${domain}"`)
+      console.log(`[get_user_cubes] fetched ${domain_cubes.length} cubes`)
     } catch (err) {
-      console.error('[get_module_cubes] error:', err)
+      console.error('[get_user_cubes] error:', err)
     }
   }
 
@@ -361,7 +371,9 @@ app.get('/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
+/* TODO decide if we need /api/docs at all
 // API documentation endpoint
+import { buildDrizzleCubes } from './drizzleCubes'
 app.get('/api/docs', (c) => {
   // Get metadata from the cube app (we could also create a temporary semantic layer for this)
   // For now, we'll provide static documentation. In a real app, you might extract this from the cubes
@@ -415,6 +427,8 @@ app.get('/api/docs', (c) => {
     }
   })
 })
+*/ 
+
 
 // Per-request cube app: fetch domain cubes, build cubes, and create isolated app
 app.all('/:domain/cubejs-api/*', async (c) => {
@@ -532,11 +546,16 @@ app.use('/api/notebooks/*', async (_c, next) => {
 
 app.route('/api/notebooks', notebooksApp)
 
-// Mount AI proxy routes with database access
-app.use('/api/ai/*', async (_c, next) => {
-  await next()
-})
-app.route('/api/ai', aiApp)
+/* TODO decide if/how we want to expuse /api/ai
+  
+  import aiApp from './ai-routes'
+  // Mount AI proxy routes with database access
+  app.use('/api/ai/*', async (_c, next) => {
+    await next()
+  })
+
+  app.route('/api/ai', aiApp)
+*/
 
 // Example protected endpoint showing how to use the same security context
 app.get('/api/user-info', async (c) => {

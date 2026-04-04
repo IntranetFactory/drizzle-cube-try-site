@@ -159,8 +159,8 @@ export function entityCubesToCubes(entityCubes: EntityCube[], schemaObj: Record<
             ...join,
             targetCube: () => getCube(join.targetCube),
             on: join.on.map(({ source, target }) => ({
-              source: resolveColumn(schemaObj, source),
-              target: resolveColumn(schemaObj, target),
+              source: (() => { try { return resolveColumn(schemaObj, source) } catch (e: any) { throw new Error(`[cube "${name}" join "${key}"] ${e.message}`) } })(),
+              target: (() => { try { return resolveColumn(schemaObj, target) } catch (e: any) { throw new Error(`[cube "${name}" join "${key}"] ${e.message}`) } })(),
             })),
           }])
         )
@@ -170,7 +170,7 @@ export function entityCubesToCubes(entityCubes: EntityCube[], schemaObj: Record<
     const dimensions = Object.fromEntries(
       Object.entries(rest.dimensions).map(([key, dim]) => {
         const { column, sql: sqlStr, ...dimRest } = dim as EntityDimension & { column?: string; sql?: string }
-        const sqlValue = column ? resolveColumn(schemaObj, column) : sqlStr ? buildDynamicSql(schemaObj, sqlStr) : undefined
+        const sqlValue = column ? (() => { try { return resolveColumn(schemaObj, column) } catch (e: any) { throw new Error(`[cube "${name}" dimension "${key}"] ${e.message}`) } })() : sqlStr ? buildDynamicSql(schemaObj, sqlStr) : undefined
         return [key, sqlValue ? { ...dimRest, sql: sqlValue } : dimRest]
       })
     ) as Record<string, Dimension>
@@ -178,7 +178,7 @@ export function entityCubesToCubes(entityCubes: EntityCube[], schemaObj: Record<
     const measures = Object.fromEntries(
       Object.entries(rest.measures).map(([key, m]) => {
         const { column, sql: sqlStr, filters, ...mRest } = m as EntityMeasure & { column?: string; sql?: string }
-        const sqlValue = column ? resolveColumn(schemaObj, column) : sqlStr ? buildDynamicSql(schemaObj, sqlStr) : undefined
+        const sqlValue = column ? (() => { try { return resolveColumn(schemaObj, column) } catch (e: any) { throw new Error(`[cube "${name}" measure "${key}"] ${e.message}`) } })() : sqlStr ? buildDynamicSql(schemaObj, sqlStr) : undefined
         const resolvedFilters = filters?.map(f => () => resolveEntityFilter(schemaObj, f))
         return [key, { ...mRest, ...(sqlValue && { sql: sqlValue }), ...(resolvedFilters && { filters: resolvedFilters }) }]
       })

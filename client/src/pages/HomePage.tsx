@@ -14,7 +14,6 @@ import {
   CubeIcon,
 } from '@heroicons/react/24/outline'
 import PageHead from '../components/PageHead'
-import GitHubStarsButton from '../components/GitHubStarsButton'
 import { getTheme, watchThemeChanges, type Theme } from '../theme/utils'
 import { useAnalyticsPages } from '../hooks/useAnalyticsPages'
 
@@ -147,7 +146,6 @@ export default function HomePage() {
 
             {/* Social proof row */}
             <div className="flex items-center gap-4 text-sm text-dc-text-muted animate-fade-in stagger-4">
-              <GitHubStarsButton />
               <a href="https://discord.gg/kFvT97hZsv" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-[#5865F2] transition-colors">
                 <DiscordIcon className="w-4 h-4" />
                 Discord

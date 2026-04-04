@@ -105,9 +105,11 @@ export function objectToTable(serialized: SerializedTable): PgTable {
       builder = builder.primaryKey()
     }
     if (col.generatedIdentity) {
-      builder = col.generatedIdentity === 'always'
-        ? builder.generatedAlwaysAsIdentity()
-        : builder.generatedByDefaultAsIdentity()
+      if (typeof (builder as any).generatedAlwaysAsIdentity === 'function') {
+        builder = col.generatedIdentity === 'always'
+          ? builder.generatedAlwaysAsIdentity()
+          : builder.generatedByDefaultAsIdentity()
+      }
     }
     if (col.notNull && !col.primaryKey) {
       builder = builder.notNull()

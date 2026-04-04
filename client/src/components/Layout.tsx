@@ -3,7 +3,6 @@ import { DocumentTextIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outl
 import { useState } from 'react'
 import DrizzleCubeIcon from './DrizzleCubeIcon'
 import ThemeToggle from './ThemeToggle'
-import GitHubStarsButton from './GitHubStarsButton'
 
 const DiscordIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
@@ -149,7 +148,6 @@ export default function Layout({ children }: LayoutProps) {
                 <DocumentTextIcon className="w-4 h-4 mr-1.5" />
                 Docs
               </a>
-              <GitHubStarsButton />
               <div className="relative">
                 <ThemeToggle />
                 {/* Theme hint - only shown on home page */}
@@ -289,7 +287,6 @@ export default function Layout({ children }: LayoutProps) {
                     <DocumentTextIcon className="w-5 h-5 inline mr-2" />
                     Documentation
                   </a>
-                  <GitHubStarsButton mobile />
                 </div>
               </div>
             </div>

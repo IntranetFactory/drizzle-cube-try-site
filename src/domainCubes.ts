@@ -35,6 +35,7 @@ function domainPropToSqlType(prop: any): SerializedColumn['type'] {
 
 function domainCubesToEntityCubes(domainCubes: any[]): EntityCube[] {
   const tableNames = new Set(domainCubes.map((dc: any) => dc.table.table_name))
+  const tableIdColumns = new Map<string, string>(domainCubes.map((dc: any) => [dc.table.table_name, dc.table.id_column ?? 'id']))
 
   const cubes = domainCubes.map((dc: any) => {
     const tableName: string = dc.table.table_name
@@ -44,6 +45,8 @@ function domainCubesToEntityCubes(domainCubes: any[]): EntityCube[] {
     const dimensions: Record<string, EntityDimension> = {}
     const measures: Record<string, EntityMeasure> = {}
     const joins: Record<string, EntityCubeJoin> = {}
+    const pkColumn: string = dc.table.id_column ?? 'id'
+
     let countMeasure = false
     const amountFields: { fieldName: string; title: string }[] = []
 
@@ -69,7 +72,7 @@ function domainCubesToEntityCubes(domainCubes: any[]): EntityCube[] {
             relationship: 'belongsTo',
             on: [{
               source: `${tableName}.${fieldName}`,
-              target: `${prop.reference_table}.${prop.reference_table_id_column || 'id'}`
+              target: `${prop.reference_table}.${tableIdColumns.get(prop.reference_table) ?? 'id'}`
             }]
           }
         }
@@ -100,7 +103,7 @@ function domainCubesToEntityCubes(domainCubes: any[]): EntityCube[] {
         name: 'count',
         title: `${label} Count`,
         type: 'count',
-        column: `${tableName}.id`
+        column: `${tableName}.${pkColumn}`
       }
     }
 
@@ -131,7 +134,7 @@ function domainCubesToEntityCubes(domainCubes: any[]): EntityCube[] {
             joins[childCubeName] = {
               targetCube: childCubeName,
               relationship: 'hasMany',
-              on: [{ source: `${tableName}.id`, target: `${childTable}.${childColumn}` }]
+              on: [{ source: `${tableName}.${pkColumn}`, target: `${childTable}.${childColumn}` }]
             }
           }
         }

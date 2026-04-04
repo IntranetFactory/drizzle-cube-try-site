@@ -8,9 +8,9 @@ import app from './app'
 
 const port = parseInt(process.env.PORT || '3459')
 
-console.log(`🚀 Starting Hono server on http://localhost:${port}`)
-console.log(`📊 Analytics API available at http://localhost:${port}/cubejs-api/v1/meta`)
-console.log(`📖 API documentation at http://localhost:${port}/api/docs`)
+//console.log(`🚀 Starting Hono server on http://localhost:${port}`)
+//console.log(`📊 Analytics API available at http://localhost:${port}/cubejs-api/v1/meta`)
+//console.log(`📖 API documentation at http://localhost:${port}/api/docs`)
 
 serve({
   fetch: app.fetch,
