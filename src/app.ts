@@ -158,6 +158,17 @@ async function extractSecurityContext(c: any): Promise<SecurityContext> {
 // Create the main Hono app
 const app = new Hono<{ Variables: Variables; Bindings: Bindings }>()
 
+const rlsSetup: RLSSetupFn = async (tx, securityContext) => {
+  const sub = securityContext.semantiusUser?.claims?.sub
+  const tid = securityContext.semantiusUser?.claims?.tid
+  console.log('RLS setup - claims:', securityContext.semantiusUser?.claims)
+  await tx.execute(sql.raw(`SET ROLE authenticated`))
+  await tx.execute(sql.raw(`SELECT set_config('role', 'semantius_user', true)`))
+  await tx.execute(sql.raw(`SELECT set_config('request.jwt.claim.sub', '${sub}', true)`))
+  await tx.execute(sql.raw(`SELECT set_config('request.jwt.claim.role', 'authenticated', true)`))
+  await tx.execute(sql.raw(`SELECT set_config('request.jwt.claim.aud', 'tenant://${tid}', true)`))
+}
+
 // Add middleware
 app.use('*', logger())
 app.use('*', cors({
@@ -191,8 +202,9 @@ app.use('*', async (c, next) => {
     const host = (c.req.header('x-forwarded-host') || c.req.header('host') || '').split(':')[0]
     tenantName = host.split('.')[0]
   }
+
   const tenantInfo = await resolveControlPlane(tenantName)
-  //console.log('[semantius] resolved tenant info:', tenantInfo)
+  console.log(`[semantius] resolved tenant ${tenantName} info:`, tenantInfo)
 
   c.set('tenantInfo', tenantInfo)
 
@@ -305,15 +317,6 @@ app.all('/mcp/*', async (c) => {
   const domainCubeData: any[] | undefined = c.get('domain_cubes')
   const { schema, allCubes } = buildDomainCubes(domainCubeData)
   const db = c.get('db')
-
-  const rlsSetup: RLSSetupFn = async (tx: any, securityContext: any) => {
-    const sub = securityContext.semantiusUser?.claims?.sub
-    await tx.execute(sql.raw(`SET ROLE authenticated`))
-    await tx.execute(sql.raw(`SELECT set_config('role', 'semantius_user', true)`))
-    await tx.execute(sql.raw(`SELECT set_config('request.jwt.claim.sub', '${sub}', true)`))
-    await tx.execute(sql.raw(`SELECT set_config('request.jwt.claim.role', 'authenticated', true)`))
-    await tx.execute(sql.raw(`SELECT set_config('request.jwt.claim.aud', '', true)`))
-  }
 
   const cubeApp = createCubeApp({
     cubes: allCubes,
@@ -465,21 +468,6 @@ app.all('/:domain/cubejs-api/*', async (c) => {
   c.set('module_cubes', cubeSchemaJSON)
 
   const db = c.get('db')
-
-  const rlsSetup: RLSSetupFn = async (tx, securityContext) => {
-
-    // console.log('RLS setup-claims:', securityContext.semantiusUser?.claims)
-
-    const sub = securityContext.semantiusUser?.claims?.sub
-
-    await tx.execute(sql.raw(`SET ROLE authenticated`))
-    await tx.execute(sql.raw(`SELECT set_config('role', 'semantius_user', true)`))
-    await tx.execute(sql.raw(`SELECT set_config('request.jwt.claim.sub', '${sub}', true)`))
-    await tx.execute(sql.raw(`SELECT set_config('request.jwt.claim.role', 'authenticated', true)`))
-    await tx.execute(sql.raw(`SELECT set_config('request.jwt.claim.aud', '', true)`))
-  }
-
-
 
   const cubeApp = createCubeApp({
     cubes: allCubes,
