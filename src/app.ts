@@ -161,7 +161,7 @@ const app = new Hono<{ Variables: Variables; Bindings: Bindings }>()
 const rlsSetup: RLSSetupFn = async (tx, securityContext) => {
   const sub = securityContext.semantiusUser?.claims?.sub
   const tid = securityContext.semantiusUser?.claims?.tid
-  console.log('RLS setup - claims:', securityContext.semantiusUser?.claims)
+  // console.log('RLS setup - claims:', securityContext.semantiusUser?.claims)
   await tx.execute(sql.raw(`SET ROLE authenticated`))
   await tx.execute(sql.raw(`SELECT set_config('role', 'semantius_user', true)`))
   await tx.execute(sql.raw(`SELECT set_config('request.jwt.claim.sub', '${sub}', true)`))
