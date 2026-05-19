@@ -96,6 +96,11 @@ function getEnvVar(key: string, fallback: string = '', env?: Record<string, any>
   return fallback
 }
 
+// Verbose logging gate. Enable with DEBUG=true (env var, wrangler secret, or .dev.vars).
+function isDebug(env?: Record<string, any>): boolean {
+  return getEnvVar('DEBUG', '', env) === 'true'
+}
+
 // Auto-detect Neon vs local PostgreSQL based on connection string
 function isNeonUrl(url: string): boolean {
   return url.includes('.neon.tech') || url.includes('neon.database')
@@ -211,7 +216,7 @@ app.use('*', async (c, next) => {
   if (c.req.path.startsWith('/.well-known/')) return next()
 
   let headers = buildOutHeaders(c)
-
+console.log('[semantius] auth headers:', headers)
   const authRes = headers ? await fetch(`https://api.semantius.cloud/tenant/${tenantName}`, { headers }) : null
 
   if (!authRes || authRes.status !== 200) {
@@ -287,35 +292,53 @@ app.all('/mcp/*', async (c) => {
   c.set('domain', domain)
 
   const semantiusUser = c.get('semantiusUser') as { postgrestUrl: string; access_token: string }
+  const debug = isDebug(c.env)
+  let mcpRpcUrl: string | undefined
+  let mcpRpcBody: string | undefined
   if (semantiusUser?.postgrestUrl && semantiusUser?.access_token) {
     try {
-      const rpcUrl = domain
+      mcpRpcUrl = domain
         ? `${semantiusUser.postgrestUrl}/rpc/get_module_cubes`
         : `${semantiusUser.postgrestUrl}/rpc/get_user_cubes`
-      const rpcBody = domain ? JSON.stringify({ p_module_name: domain }) : JSON.stringify({})
-      const rpcRes = await fetch(rpcUrl, {
+      mcpRpcBody = domain ? JSON.stringify({ p_module_name: domain }) : JSON.stringify({})
+      const rpcRes = await fetch(mcpRpcUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${semantiusUser.access_token}`,
         },
-        body: rpcBody,
+        body: mcpRpcBody,
       })
       if (!rpcRes.ok) {
         const errBody = await rpcRes.text()
-        console.error(`[get_user_cubes] ${rpcRes.status} error from ${rpcUrl}:`, errBody)
+        console.error(`[get_user_cubes] ${rpcRes.status} error from ${mcpRpcUrl}:`, errBody)
         return c.json(JSON.parse(errBody), rpcRes.status as any)
       }
       const domain_cubes = await rpcRes.json() as any[]
       c.set('domain_cubes', domain_cubes)
-      console.log(`[get_user_cubes] fetched ${domain_cubes.length} cubes`)
+      if (debug) console.log(`[get_user_cubes] fetched ${domain_cubes.length} cubes from ${mcpRpcUrl}`)
+      else console.log(`[get_user_cubes] fetched ${domain_cubes.length} cubes`)
     } catch (err) {
-      console.error('[get_user_cubes] error:', err)
+      console.error('[get_user_cubes] error:', err, debug ? { rpcUrl: mcpRpcUrl, body: mcpRpcBody } : undefined)
     }
+  } else {
+    console.warn('[mcp] missing postgrestUrl/access_token on semantiusUser — skipping RPC', {
+      hasPostgrestUrl: !!semantiusUser?.postgrestUrl,
+      hasAccessToken: !!semantiusUser?.access_token,
+    })
   }
 
   const domainCubeData: any[] | undefined = c.get('domain_cubes')
   const { schema, allCubes } = buildDomainCubes(domainCubeData)
+
+  if (!allCubes || allCubes.length === 0) {
+    console.error('[mcp] empty cubes array — createCubeApp will throw.', debug ? {
+      rpcUrl: mcpRpcUrl,
+      rpcBody: mcpRpcBody,
+      token: semantiusUser?.access_token,
+      domainCubeDataLength: Array.isArray(domainCubeData) ? domainCubeData.length : domainCubeData,
+    } : { hint: 'Set DEBUG=true to log RPC URL + token' })
+  }
   const db = c.get('db')
 
   const cubeApp = createCubeApp({
@@ -441,28 +464,50 @@ app.all('/:domain/cubejs-api/*', async (c) => {
 
   // Fetch domain_cubes from Semantius and set on context
   const semantiusUser = c.get('semantiusUser') as { postgrestUrl: string; access_token: string }
+  const debug = isDebug(c.env)
+  let domRpcUrl: string | undefined
+  let domRpcBody: string | undefined
+  let domRpcStatus: number | undefined
   if (semantiusUser?.postgrestUrl && semantiusUser?.access_token) {
     try {
-      const rpcRes = await fetch(`${semantiusUser.postgrestUrl}/rpc/get_module_cubes`, {
+      domRpcUrl = `${semantiusUser.postgrestUrl}/rpc/get_module_cubes`
+      domRpcBody = JSON.stringify({ p_module_name: domain })
+      const rpcRes = await fetch(domRpcUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${semantiusUser.access_token}`,
         },
-        body: JSON.stringify({ p_module_name: domain }),
+        body: domRpcBody,
       })
+      domRpcStatus = rpcRes.status
       const domain_cubes = await rpcRes.json() as any[]
       c.set('domain_cubes', domain_cubes)
-      console.log(`[get_module_cubes] fetched ${domain_cubes.length} cubes for domain "${domain}"`)
-      // writeFileSync('get_domain_cubes.json', JSON.stringify(domain_cubes, null, 2))
+      if (debug) console.log(`[get_module_cubes] fetched ${Array.isArray(domain_cubes) ? domain_cubes.length : 'non-array'} cubes for domain "${domain}" from ${domRpcUrl} (status ${domRpcStatus})`)
+      else console.log(`[get_module_cubes] fetched ${Array.isArray(domain_cubes) ? domain_cubes.length : 'non-array'} cubes for domain "${domain}"`)
     } catch (err) {
-      console.error('[get_module_cubes] error:', err)
+      console.error('[get_module_cubes] error:', err, debug ? { rpcUrl: domRpcUrl, body: domRpcBody, status: domRpcStatus } : undefined)
     }
+  } else {
+    console.warn('[cubejs-api] missing postgrestUrl/access_token on semantiusUser — skipping RPC', {
+      hasPostgrestUrl: !!semantiusUser?.postgrestUrl,
+      hasAccessToken: !!semantiusUser?.access_token,
+    })
   }
 
   // Build cubes from domain_cubes (semantic model)
   const domainCubeData: any[] | undefined = c.get('domain_cubes')
   const { schema, allCubes, cubeSchemaJSON } = buildDomainCubes(domainCubeData);
+
+  if (!allCubes || allCubes.length === 0) {
+    console.error(`[cubejs-api] empty cubes array for domain "${domain}" — createCubeApp will throw.`, debug ? {
+      rpcUrl: domRpcUrl,
+      rpcBody: domRpcBody,
+      rpcStatus: domRpcStatus,
+      token: semantiusUser?.access_token,
+      domainCubeDataLength: Array.isArray(domainCubeData) ? domainCubeData.length : domainCubeData,
+    } : { hint: 'Set DEBUG=true to log RPC URL + token' })
+  }
 
   // Expose cubeSchemaJSON as module_cubes for downstream consumers
   c.set('module_cubes', cubeSchemaJSON)

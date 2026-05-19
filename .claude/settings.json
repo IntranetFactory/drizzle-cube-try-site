@@ -13,7 +13,12 @@
       "Bash(git -C \"C:/dev/oauth-hono-mcp\" checkout -- packages/server/src/index.ts)",
       "Bash(find node_modules/drizzle-cube -name hono*)",
       "Bash(curl -s http://localhost:3458/nwind/cubejs-api/v1/meta)",
-      "Bash(ls -la /c/dev/drizzle-cube-try-site/*.ts /c/dev/drizzle-cube-try-site/*.js)"
+      "Bash(ls -la /c/dev/drizzle-cube-try-site/*.ts /c/dev/drizzle-cube-try-site/*.js)",
+      "Bash(node -e \"console.log\\(JSON.stringify\\(require\\('c:/dev/drizzle-cube-try-site/package.json'\\).scripts, null, 2\\)\\)\")",
+      "PowerShell(npm run deploy:server)",
+      "Bash(node -e \"const p=require\\('c:/dev/drizzle-cube-try-site/package.json'\\); console.log\\('dep:', p.dependencies['drizzle-cube'], 'devDep:', p.devDependencies?.['drizzle-cube']\\)\")",
+      "PowerShell(npm view drizzle-cube version)",
+      "PowerShell(pnpm add drizzle-cube@latest)"
     ],
     "additionalDirectories": [
       "C:\\dev\\oauth-hono-mcp\\packages\\server\\src"

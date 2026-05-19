@@ -60,20 +60,6 @@ export interface EntityCube {
   meta?: Record<string, any>
 }
 
-// ─── Cube proxy registry for lazy targetCube resolution ───
-
-const cubeRegistry = new Map<string, Cube>()
-const cubeProxies = new Map<string, Cube>()
-
-function getCube(name: string): Cube {
-  let proxy = cubeProxies.get(name)
-  if (!proxy) {
-    proxy = {} as Cube
-    cubeProxies.set(name, proxy)
-  }
-  return proxy
-}
-
 // ─── Conversion helpers ───
 
 function resolveColumn(schemaObj: Record<string, unknown>, ref: string): AnyColumn {
@@ -145,6 +131,19 @@ function resolveEntityFilter(schemaObj: Record<string, unknown>, filter: EntityF
 // ─── Core engine: EntityCube[] → Cube[] ───
 
 export function entityCubesToCubes(entityCubes: EntityCube[], schemaObj: Record<string, unknown>): Cube[] {
+  // Per-call registries so cubes can lazily reference each other within one
+  // build, without leaking state across requests/tenants.
+  const cubeRegistry = new Map<string, Cube>()
+  const cubeProxies = new Map<string, Cube>()
+  const getCube = (name: string): Cube => {
+    let proxy = cubeProxies.get(name)
+    if (!proxy) {
+      proxy = {} as Cube
+      cubeProxies.set(name, proxy)
+    }
+    return proxy
+  }
+
   for (const ec of entityCubes) {
     const { name, joins, tableName, ...rest } = ec
 
